@@ -2,47 +2,47 @@ import { Container, Section, Heading, Text, Card, CardTitle, CardContent, Button
 
 const programs = [
   {
-    id: 'legal-aid',
-    title: 'Free Legal Aid',
-    description: 'We provide free legal representation and consultation to those who cannot afford legal services.',
+    id: 'education-child-development',
+    title: 'Education & Child Development',
+    description: 'Scholarships, books and tutoring from pre-school to tertiary — plus counselling to help orphans pursue education through the Love of Jesus.',
     features: [
-      'Court representation',
-      'Legal consultation',
-      'Document preparation',
-      'Case management',
+      'Scholarships & material support',
+      'Tutoring and school liaison',
+      'Mentorship by Christian role models',
+      'Art & therapy sessions',
     ],
   },
   {
-    id: 'awareness',
-    title: 'Legal Awareness Programs',
-    description: 'Educational programs to help communities understand their legal rights and how to access justice.',
+    id: 'women-empowerment',
+    title: 'Women & Youth Economic Empowerment',
+    description: 'Vocational skills and micro-business support for widows, single mothers and youth to live sustainably.',
     features: [
-      'Community workshops',
-      'School programs',
-      'Legal literacy campaigns',
-      'Training for grassroots workers',
+      'Sewing, baking, hairdressing, computer literacy',
+      'Entrepreneurship & start-up kits',
+      'Digital skills for the digital economy',
+      'Monthly assistance for widows',
     ],
   },
   {
-    id: 'rehabilitation',
-    title: 'Rehabilitation Support',
-    description: 'Comprehensive support services for survivors of violence and trauma.',
+    id: 'house-help-caregiver',
+    title: 'House Helps & Caregiver Training',
+    description: 'Reliable, trained house helps and caregivers for homes needing cleaning, cooking, childcare and elderly care.',
     features: [
-      'Counseling services',
-      'Shelter support',
-      'Vocational training',
-      'Referral networks',
+      'First aid & life skills training',
+      'Childcare & geriatrics care',
+      'Etiquette and wellbeing',
+      'Household placement hub',
     ],
   },
   {
-    id: 'advocacy',
-    title: 'Policy Advocacy',
-    description: 'Working to create systemic change through research and policy advocacy.',
+    id: 'community-health',
+    title: 'Healthcare, Wellbeing & Community',
+    description: 'Health care provision, psychosocial support and community outreach to foster belonging and resilience.',
     features: [
-      'Policy research',
-      'Legislative advocacy',
-      'Public campaigns',
-      'Coalition building',
+      'Health care referrals',
+      'Counselling and support groups',
+      'Community events & advocacy',
+      'Persons with Disabilities support',
     ],
   },
 ];
@@ -54,7 +54,7 @@ export default function WhatWeDoPage() {
         <Container>
           <Heading level={1} className="text-white">What We Do</Heading>
           <Text size="lg" color="light" className="mt-4 max-w-2xl">
-            Our comprehensive programs address the legal needs of vulnerable women and children.
+            Empowering orphans, widows, single mothers and caregivers in Lower Manya Krobo, Eastern Region, Ghana through education, skills training and sustainable livelihoods.
           </Text>
         </Container>
       </Section>
@@ -92,10 +92,9 @@ export default function WhatWeDoPage() {
       <Section background="secondary">
         <Container>
           <div className="text-center">
-            <Heading level={2} className="text-[#1a1a1a]">Need Legal Assistance?</Heading>
+            <Heading level={2} className="text-[#1a1a1a]">Need Support or Want to Help?</Heading>
             <Text size="lg" className="mt-4 mb-8 max-w-2xl mx-auto text-[#1a1a1a]">
-              If you or someone you know needs legal help, please reach out to us. 
-              Our team is here to support you.
+              Whether you are an orphan, widow, caregiver seeking training, or a family needing a trusted house help — we are here to support you.
             </Text>
             <Button variant="primary" size="lg">
               Contact Us

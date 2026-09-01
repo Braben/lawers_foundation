@@ -3,35 +3,35 @@ import Link from 'next/link';
 
 const involvementOptions = [
   {
-    title: 'Donate',
-    description: 'Your financial support helps us provide free legal aid to those who need it most.',
+    title: 'Donate / Sponsor',
+    description: 'Your support can change a life and shape the future of many — giving a vulnerable child or young single parent education, nutrition, health care, shelter, clothing and financial aid.',
     details: [
-      'One-time donations',
-      'Monthly giving',
-      'Corporate partnerships',
-      'Fundraising events',
+      'Sponsor education (pre-school to tertiary)',
+      'Provide nutrition, health care & shelter',
+      'Monthly assistance for widows & elderly',
+      'Fund a future city for vulnerable groups',
     ],
     cta: 'Donate Now',
   },
   {
     title: 'Volunteer',
-    description: 'Join our team of dedicated volunteers and make a difference in your community.',
+    description: 'Join mentors, trainers and community volunteers helping orphans, widows and caregivers.',
     details: [
-      'Legal professionals',
-      'Social workers',
-      'Students',
-      'General volunteers',
+      'Tutoring and mentorship',
+      'Skills training (sewing, baking, digital)',
+      'Counselling & art therapy facilitation',
+      'Community outreach & advocacy',
     ],
     cta: 'Apply to Volunteer',
   },
   {
     title: 'Partner',
-    description: 'Collaborate with us to expand our reach and impact.',
+    description: 'Build partnership with government, private sector and CSOs to leverage resources, expertise and funding for sustainable impact.',
     details: [
-      'NGOs and civil society',
+      'Government & CSO partnerships',
       'Corporate social responsibility',
-      'Government programs',
       'Educational institutions',
+      'House-help hub development',
     ],
     cta: 'Partner With Us',
   },
@@ -44,8 +44,7 @@ export default function GetInvolvedPage() {
         <Container>
           <Heading level={1} className="text-white">Get Involved</Heading>
           <Text size="lg" color="light" className="mt-4 max-w-2xl">
-            Join us in our mission to bring justice to every woman and child. 
-            There are many ways to make a difference.
+            Donate, Volunteer or spread the word — help orphans fully supported in Lower Manya Krobo and beyond break cycles of poverty.
           </Text>
         </Container>
       </Section>
@@ -84,11 +83,11 @@ export default function GetInvolvedPage() {
               <Heading level={2}>Other Ways to Help</Heading>
               <ul className="mt-6 space-y-4">
                 {[
-                  'Spread awareness about our work',
-                  'Host a fundraising event',
-                  'Provide pro bono legal services',
-                  'Donate office supplies or equipment',
-                  'Offer professional services',
+                  'Spread awareness about our work in communities',
+                  'Hire a trained, reliable house help / caregiver',
+                  'Host a fundraising or visibility event',
+                  'Provide pro bono professional services',
+                  'Donate clothing, books or start-up kits',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3">
                     <span className="w-3 h-3 bg-[#2C5F2D] rounded-full" aria-hidden="true" />
@@ -98,7 +97,7 @@ export default function GetInvolvedPage() {
               </ul>
             </div>
             <div className="bg-[#EDF4F2] rounded-xl h-64 flex items-center justify-center">
-              <Text color="muted">Get Involved Image</Text>
+              <Text color="muted">Change a Life Today — Lower Manya Krobo</Text>
             </div>
           </div>
         </Container>
@@ -111,15 +110,15 @@ export default function GetInvolvedPage() {
             {[
               {
                 q: 'How are donations used?',
-                a: 'Your donations directly fund legal aid services, awareness programs, and rehabilitation support for women and children in need.',
+                a: 'Donations fund education (scholarships, books, tutoring), nutrition, health care, shelter, clothing and financial aid for orphans; vocational training and micro-business start-up kits for widows and single mothers; and caregiver training.',
               },
               {
-                q: 'Can I volunteer remotely?',
-                a: 'Yes, we offer remote volunteering opportunities including legal research, translation services, and online awareness campaigns.',
+                q: 'Can I sponsor a specific child or widow?',
+                a: 'Yes — you can sponsor education from pre-school to tertiary or provide monthly assistance to widows and elderly women. Contact us to be matched.',
               },
               {
-                q: 'How do I apply to volunteer?',
-                a: 'Fill out our volunteer application form, and our team will contact you within 48 hours.',
+                q: 'How do I request a trained house help?',
+                a: 'We vet and train 30 caregivers in first aid, childcare, geriatrics, etiquette and life skills — then connect them to households. Contact us to hire a reliable helper.',
               },
             ].map((faq) => (
               <Card key={faq.q}>
@@ -138,7 +137,7 @@ export default function GetInvolvedPage() {
           <div className="text-center">
             <Heading level={2} className="text-[#1a1a1a]">Ready to Make a Difference?</Heading>
             <Text size="lg" className="mt-4 mb-8 max-w-2xl mx-auto text-[#1a1a1a]">
-              Contact us today to learn more about how you can get involved.
+              Education, health care, shelter or a trained caregiver — your support nurtures God-fearing, disciplined children and sustainable livelihoods.
             </Text>
             <Link href="/contact">
               <Button variant="primary" size="lg">Contact Us</Button>

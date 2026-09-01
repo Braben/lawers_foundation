@@ -15,14 +15,12 @@ export default function Home() {
           <div className="max-w-3xl relative z-10">
             <FadeIn direction="up" delay={0.2}>
               <Heading level={1} className="text-white mb-6">
-                Justice for Every Woman & Child
+                Empowering Orphans, Widows & Caregivers in Ghana
               </Heading>
             </FadeIn>
             <FadeIn direction="up" delay={0.4}>
               <Text size="lg" color="light" className="mb-8">
-                Lawers Foundation is dedicated to empowering underprivileged women 
-                and children through legal awareness, free legal aid, and comprehensive 
-                support services.
+                Lawer and Lawers Foundation — a Family Support Project since the early 2000s in Lower Manya Krobo, Eastern Region — empowering orphans, widows, single mothers and caregivers through education, skills training, shelter and micro-business support, rooted in the love of Jesus.
               </Text>
             </FadeIn>
             <FadeIn direction="up" delay={0.6}>
@@ -49,9 +47,7 @@ export default function Home() {
             </FadeIn>
             <FadeIn direction="up" delay={0.2}>
               <Text size="lg" className="mt-4 max-w-2xl mx-auto">
-                To bridge the gap between law and those who need it most by providing 
-                free legal aid, creating awareness about legal rights, and advocating 
-                for policies that protect women and children.
+                To become a premier hub for training, character education and employment in Ghana — empowering vulnerable individuals, especially orphans, widows and single mothers, with skills to secure meaningful employment or start businesses for sustainable livelihoods.
               </Text>
             </FadeIn>
           </div>
@@ -60,10 +56,9 @@ export default function Home() {
               <StaggerItem>
                 <ScaleIn>
                   <Card className="h-full">
-                    <CardTitle as="h3">Legal Aid</CardTitle>
+                    <CardTitle as="h3">Education & Child Development</CardTitle>
                     <CardContent>
-                      Free legal representation and consultation for those who cannot 
-                      afford legal services.
+                      Scholarships, books, tutoring and counselling from pre-school to tertiary — nurturing God-fearing, disciplined children.
                     </CardContent>
                   </Card>
                 </ScaleIn>
@@ -71,10 +66,9 @@ export default function Home() {
               <StaggerItem>
                 <ScaleIn delay={0.1}>
                   <Card className="h-full">
-                    <CardTitle as="h3">Awareness</CardTitle>
+                    <CardTitle as="h3">Economic Empowerment</CardTitle>
                     <CardContent>
-                      Educational programs about legal rights and protections available 
-                      to women and children.
+                      Vocational skills — sewing, baking, hairdressing, computer literacy — plus micro-finance and start-up kits for widows & youth.
                     </CardContent>
                   </Card>
                 </ScaleIn>
@@ -82,10 +76,9 @@ export default function Home() {
               <StaggerItem>
                 <ScaleIn delay={0.2}>
                   <Card className="h-full">
-                    <CardTitle as="h3">Advocacy</CardTitle>
+                    <CardTitle as="h3">Caregiving & Wellbeing</CardTitle>
                     <CardContent>
-                      Policy research and advocacy to create systemic change for vulnerable 
-                      populations.
+                      Training house helps & caregivers in childcare, geriatrics, first aid, etiquette, health care and art therapy for holistic wellbeing.
                     </CardContent>
                   </Card>
                 </ScaleIn>
@@ -102,16 +95,15 @@ export default function Home() {
               <div>
                 <Heading level={2}>Who We Serve</Heading>
                 <Text size="lg" className="mt-4 mb-6">
-                  We work with women and children who face legal challenges but lack 
-                  the resources and knowledge to navigate the justice system.
+                  In Lower Manya Krobo and beyond, we walk with those left without family safety nets — delivering education, shelter, health care and skills for sustainable livelihoods.
                 </Text>
                 <ul className="space-y-3">
                   {[
-                    'Survivors of domestic violence',
-                    'Women facing marital disputes',
-                    'Children in need of protection',
-                    'Victims of workplace harassment',
-                    'Underprivileged communities',
+                    'Orphans — from pre-school to tertiary (60 targeted)',
+                    'Widows & single mothers (40 + 70 targeted)',
+                    'Youth seeking trade & apprenticeship',
+                    'Aspiring caregivers & house helps (30 targeted)',
+                    'Persons with Disabilities (PWDs) & vulnerable households',
                   ].map((item, index) => (
                     <FadeIn key={item} direction="left" delay={0.1 * index}>
                       <li className="flex items-center gap-3">
@@ -141,12 +133,11 @@ export default function Home() {
         <Container>
           <div className="text-center">
             <FadeIn>
-              <Heading level={2} className="text-[#1a1a1a]">Make a Difference Today</Heading>
+              <Heading level={2} className="text-[#1a1a1a]">Your Support Can Shape a Future</Heading>
             </FadeIn>
             <FadeIn delay={0.2}>
               <Text size="lg" className="mt-4 mb-8 max-w-2xl mx-auto text-[#1a1a1a]">
-                Your support can help provide legal aid to those who need it most. 
-                Join us in our mission to create a more just society.
+                Sponsorship provides education, nutrition, health care, shelter, clothing and financial aid — and trains reliable caregivers for households needing support with cleaning, cooking and care.
               </Text>
             </FadeIn>
             <FadeIn delay={0.4}>
@@ -172,10 +163,10 @@ export default function Home() {
           </FadeIn>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8">
             {[
-              { number: 10000, suffix: '+', label: 'Lives Impacted' },
-              { number: 5000, suffix: '+', label: 'Legal Consultations' },
-              { number: 500, suffix: '+', label: 'Court Cases Supported' },
-              { number: 100, suffix: '+', label: 'Community Programs' },
+              { number: 200, suffix: '+', label: 'Beneficiaries (Orphans, Widows, Youth)' },
+              { number: 80, suffix: '', label: 'Scholarships & Education Support' },
+              { number: 40, suffix: '', label: 'Women with Vocational Skills' },
+              { number: 200, suffix: '', label: 'Community Members Sensitized' },
             ].map((stat, index) => (
               <FadeIn key={stat.label} delay={0.1 * index}>
                 <div className="text-center">

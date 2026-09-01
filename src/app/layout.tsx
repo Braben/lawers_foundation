@@ -16,23 +16,23 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lawers Foundation | Legal Empowerment for Women & Children",
-    template: "%s | Lawers Foundation",
+    default: "Lawer and Lawers Foundation | Empowering Orphans, Widows & Caregivers in Ghana",
+    template: "%s | Lawer and Lawers Foundation",
   },
-  description: "Lawers Foundation is an NGO dedicated to empowering underprivileged women and children through legal awareness, free legal aid, rehabilitation support, and policy advocacy.",
-  keywords: ["NGO", "legal aid", "women empowerment", "child rights", "legal awareness", "rehabilitation", "policy advocacy", "social justice"],
-  authors: [{ name: "Lawers Foundation" }],
+  description: "Lawer and Lawers Foundation empowers orphans, widows, single mothers and caregivers in Lower Manya Krobo, Eastern Region, Ghana through education, vocational skills, economic empowerment, health & community support since early 2000.",
+  keywords: ["Lawer and Lawers", "Ghana NGO", "orphan support", "widows empowerment", "house help training", "vocational skills", "Lower Manya Krobo", "caregiver", "micro-business"],
+  authors: [{ name: "Lawer and Lawers Foundation" }],
   openGraph: {
-    title: "Lawers Foundation | Legal Empowerment for Women & Children",
-    description: "Empowering underprivileged women and children through legal awareness, aid, and support for a just society.",
+    title: "Lawer and Lawers Foundation | Empowering Orphans, Widows & Caregivers in Ghana",
+    description: "Family Support Project since early 2000 — education, skills training, shelter, micro-business and counselling for orphans, widows and caregivers in Ghana.",
     type: "website",
-    locale: "en_IN",
-    siteName: "Lawers Foundation",
+    locale: "en_GH",
+    siteName: "Lawer and Lawers Foundation",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lawers Foundation | Legal Empowerment for Women & Children",
-    description: "Empowering underprivileged women and children through legal awareness, aid, and support for a just society.",
+    title: "Lawer and Lawers Foundation | Empowering Orphans, Widows & Caregivers in Ghana",
+    description: "Family Support Project since early 2000 — education, skills training, shelter, micro-business and counselling for orphans, widows and caregivers in Ghana.",
   },
   robots: {
     index: true,

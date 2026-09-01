@@ -19,10 +19,10 @@ export default function ContactPage() {
   };
 
   const contactInfo = [
-    { label: 'Address', value: '123 Legal Avenue, New Delhi, India' },
-    { label: 'Phone', value: '+91 98765 43210' },
-    { label: 'Email', value: 'info@lawersfoundation.org' },
-    { label: 'Hours', value: 'Monday - Friday: 9:00 AM - 6:00 PM' },
+    { label: 'Address', value: 'Lower Manya Krobo Municipality, Eastern Region, Ghana' },
+    { label: 'Phone', value: '+233 XX XXX XXXX' },
+    { label: 'Email', value: 'info@lawerandlawers.org' },
+    { label: 'Hours', value: 'Monday - Friday: 9:00 AM - 5:00 PM (GMT)' },
   ];
 
   return (
@@ -31,7 +31,7 @@ export default function ContactPage() {
         <Container>
           <Heading level={1} className="text-white">Contact Us</Heading>
           <Text size="lg" color="light" className="mt-4 max-w-2xl">
-            Have questions or need legal assistance? Get in touch with us.
+            Need education support, sponsorship, or a trained house help? Get in touch — Lower Manya Krobo, Eastern Region, Ghana.
           </Text>
         </Container>
       </Section>
@@ -42,8 +42,7 @@ export default function ContactPage() {
             <div>
               <Heading level={2}>Get in Touch</Heading>
               <Text size="lg" className="mt-4">
-                We are here to help. Whether you need legal assistance, want to 
-                volunteer, or have questions about our programs, please reach out.
+                We are here to help — whether you want to sponsor an orphan, empower a widow, hire a caregiver, volunteer or partner with us.
               </Text>
 
               <div className="mt-8 space-y-6">
@@ -56,9 +55,9 @@ export default function ContactPage() {
               </div>
 
               <div className="mt-8">
-                <Text className="font-semibold text-[#2C5F2D]">Emergency Legal Aid</Text>
+                <Text className="font-semibold text-[#2C5F2D]">Support & Sponsorship</Text>
                 <Text>
-                  For urgent legal assistance, call our 24/7 helpline: +91 98765 43210
+                  For urgent support on education, health care or house-help services: +233 XX XXX XXXX
                 </Text>
               </div>
             </div>
@@ -137,7 +136,9 @@ export default function ContactPage() {
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     >
                       <option value="">Select a subject</option>
-                      <option value="legal-aid">Legal Aid Request</option>
+                      <option value="orphan-sponsorship">Orphan Sponsorship / Education</option>
+                      <option value="widow-support">Widow / Single Mother Support</option>
+                      <option value="caregiver-househelp">Hire a House Help / Caregiver</option>
                       <option value="volunteer">Volunteering</option>
                       <option value="donation">Donation Inquiry</option>
                       <option value="partnership">Partnership</option>

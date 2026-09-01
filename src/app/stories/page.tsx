@@ -7,8 +7,8 @@ import { BlogPost } from '@/types';
 const categories = [
   { id: 'all', name: 'All Stories' },
   { id: 'impact-stories', name: 'Impact Stories' },
-  { id: 'legal-awareness', name: 'Legal Awareness' },
-  { id: 'events', name: 'Events' },
+  { id: 'education', name: 'Education & Skills' },
+  { id: 'community', name: 'Community & Health' },
   { id: 'news', name: 'News & Updates' },
   { id: 'research', name: 'Research & Reports' },
 ];

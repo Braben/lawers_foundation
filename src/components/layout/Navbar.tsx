@@ -15,15 +15,15 @@ const programsDropdown = {
   href: "/programs",
   items: [
     { href: "/programs", label: "All Programs" },
-    { href: "/programs#free-legal-aid", label: "Free Legal Aid" },
-    { href: "/programs#legal-awareness", label: "Legal Awareness" },
+    { href: "/programs#orphan-support", label: "Orphan Support" },
+    { href: "/programs#women-empowerment", label: "Women's Empowerment" },
     {
-      href: "/programs#rehabilitation-support",
-      label: "Rehabilitation Support",
+      href: "/programs#house-help-caregiver",
+      label: "House Helps & Caregivers",
     },
-    { href: "/programs#policy-advocacy", label: "Policy Advocacy" },
-    { href: "/programs#child-protection", label: "Child Protection" },
-    { href: "/programs#women-empowerment", label: "Women Empowerment" },
+    { href: "/programs#education-child-development", label: "Education & Child Development" },
+    { href: "/programs#healthcare-wellbeing", label: "Healthcare & Wellbeing" },
+    { href: "/programs#economic-empowerment", label: "Economic Empowerment" },
   ],
 };
 
@@ -33,8 +33,8 @@ const storiesDropdown = {
   items: [
     { href: "/stories", label: "All Stories" },
     { href: "/stories?category=impact-stories", label: "Impact Stories" },
-    { href: "/stories?category=legal-awareness", label: "Legal Awareness" },
-    { href: "/stories?category=news", label: "News & Updates" },
+    { href: "/stories?category=education", label: "Education & Skills" },
+    { href: "/stories?category=community", label: "Community & Health" },
     { href: "/stories?category=research", label: "Research & Reports" },
   ],
 };
@@ -120,7 +120,6 @@ export function Navbar() {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const toggleRef = useRef<HTMLButtonElement | null>(null);
 
-  // Ensure hidden menu is not focusable and restore focus to toggle on close
   useEffect(() => {
     const menu = menuRef.current;
     if (!menu) return;
@@ -131,7 +130,6 @@ export function Navbar() {
     } else {
       menu.setAttribute("inert", "");
       menu.setAttribute("aria-hidden", "true");
-      // If focus is inside the hidden menu, move it back to the toggle button
       const active = document.activeElement as HTMLElement | null;
       if (active && menu.contains(active)) {
         toggleRef.current?.focus();
@@ -175,13 +173,13 @@ export function Navbar() {
           >
             <Image
               src="/images/lawersfoundation.png"
-              alt="Lawers Foundation"
-              width={160} // Increased base width
-              height={160} // Increased base height
-              className="w-20 h-20 md:w-32 md:h-32 object-contain" // Forces larger size across all screens
+              alt="Lawer and Lawers Foundation"
+              width={160}
+              height={160}
+              className="w-20 h-20 md:w-32 md:h-32 object-contain"
               loading="eager"
             />
-            Lawers Foundation
+            Lawer and Lawers Foundation
           </Link>
 
           <button

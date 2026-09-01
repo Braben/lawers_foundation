@@ -10,13 +10,13 @@ const footerLinks = {
   ],
   Programs: [
     { href: "/programs", label: "All Programs" },
-    { href: "/programs#free-legal-aid", label: "Free Legal Aid" },
-    { href: "/programs#legal-awareness", label: "Legal Awareness" },
+    { href: "/programs#orphan-support", label: "Orphan Support" },
+    { href: "/programs#women-empowerment", label: "Women's Empowerment" },
     {
-      href: "/programs#rehabilitation-support",
-      label: "Rehabilitation Support",
+      href: "/programs#house-help-caregiver",
+      label: "House Helps & Caregivers",
     },
-    { href: "/programs#policy-advocacy", label: "Policy Advocacy" },
+    { href: "/programs#education-child-development", label: "Education & Child Development" },
   ],
   Resources: [
     { href: "/stories", label: "Stories & Blog" },
@@ -31,10 +31,9 @@ export function Footer() {
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
           <div>
-            <h2 className="text-xl font-bold mb-4">Lawers Foundation</h2>
+            <h2 className="text-xl font-bold mb-4">Lawer and Lawers Foundation</h2>
             <p className="text-[#EDF4F2] text-sm mb-4">
-              Empowering underprivileged women and children through legal
-              awareness, aid, and support for a just society.
+              Family Support Project since early 2000 — empowering orphans, widows, single mothers and caregivers in Ghana through education, skills training, shelter and community support.
             </p>
           </div>
 
@@ -59,17 +58,17 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact</h3>
             <address className="not-italic text-[#EDF4F2] text-sm space-y-2">
-              <p>123 Legal Avenue</p>
-              <p>New Delhi, India</p>
-              <p>Phone: +91 98765 43210</p>
-              <p>Email: info@lawersfoundation.org</p>
+              <p>Lower Manya Krobo Municipality</p>
+              <p>Eastern Region, Ghana</p>
+              <p>Phone: +233 XX XXX XXXX</p>
+              <p>Email: info@lawerandlawers.org</p>
             </address>
           </div>
         </div>
 
         <div className="border-t border-[#97BC62] mt-8 pt-8 text-center text-sm text-[#EDF4F2]">
           <p>
-            &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> Lawers Foundation. All rights
+            &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> Lawer and Lawers Foundation. All rights
             reserved.
           </p>
         </div>
