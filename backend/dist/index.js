@@ -1,0 +1,42 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const firebase_1 = require("./config/firebase");
+const auth_1 = require("./middleware/auth");
+const programs_1 = __importDefault(require("./routes/programs"));
+const stories_1 = __importDefault(require("./routes/stories"));
+const events_1 = __importDefault(require("./routes/events"));
+const gallery_1 = __importDefault(require("./routes/gallery"));
+const content_1 = __importDefault(require("./routes/content"));
+const upload_1 = __importDefault(require("./routes/upload"));
+const donations_1 = __importDefault(require("./routes/donations"));
+const contacts_1 = __importDefault(require("./routes/contacts"));
+dotenv_1.default.config();
+(0, firebase_1.initFirebase)();
+const app = (0, express_1.default)();
+const PORT = process.env.PORT || 4000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+app.use((0, cors_1.default)({ origin: FRONTEND_URL, credentials: true }));
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(auth_1.authMiddleware);
+app.get('/health', (_req, res) => res.json({ success: true, message: 'Lawers Foundation API running', firebase: process.env.FIREBASE_PROJECT_ID ? 'configured' : 'mock-local-json' }));
+app.use('/api/programs', programs_1.default);
+app.use('/api/stories', stories_1.default);
+app.use('/api/events', events_1.default);
+app.use('/api/gallery', gallery_1.default);
+app.use('/api/content', content_1.default);
+app.use('/api/upload', upload_1.default);
+app.use('/api/donations', donations_1.default);
+app.use('/api/contacts', contacts_1.default);
+app.use('/api/auth/me', (req, res) => {
+    if (!req.user)
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    res.json({ success: true, data: req.user });
+});
+app.use((_req, res) => res.status(404).json({ success: false, message: 'Not found' }));
+app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

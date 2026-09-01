@@ -1,0 +1,536 @@
+{
+  "programs": [
+    {
+      "id": "orphan-support",
+      "slug": "orphan-support",
+      "title": "Orphan Support Program",
+      "icon": "🎓",
+      "shortDescription": "Educational support, shelter and holistic care for partially and fully orphaned children.",
+      "fullDescription": "From Class 1 through tertiary, we provide materials, financial support and counselling through the Love of Jesus. Orphans receive scholarships, books, tutoring, shelter and character formation to become well-nurtured, disciplined and God-fearing contributors to national development. Five beneficiaries are currently at tertiary level with many already gainfully employed.",
+      "features": [
+        "Scholarships, books and tutoring from pre-school to tertiary",
+        "Shelter and residential accommodation support",
+        "Counselling for career enhancement and character education",
+        "Art & therapy sessions — music, art, sports for healing",
+        "Mentorship by adult Christian role models",
+        "Nutrition, clothing, health care and financial aid"
+      ],
+      "impactStats": [
+        {
+          "value": "60",
+          "label": "Orphans Targeted"
+        },
+        {
+          "value": "80",
+          "label": "Receiving Scholarships"
+        },
+        {
+          "value": "50",
+          "label": "Enrolled in School"
+        },
+        {
+          "value": "100%",
+          "label": "Holistic Care"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 1
+    },
+    {
+      "id": "women-empowerment",
+      "slug": "women-empowerment",
+      "title": "Women's Empowerment Program",
+      "icon": "👩‍💼",
+      "shortDescription": "Entrepreneurship training and micro-finance for widows and single mothers.",
+      "fullDescription": "We train and support 50 widows and single mothers in entrepreneurship and vocational trades — sewing, baking, hairdressing, computer and digital literacy — then provide start-up kits and micro-finance to launch sustainable micro-businesses. Counselling and support groups foster resilience and self-esteem.",
+      "features": [
+        "Entrepreneurship and business training",
+        "Vocational skills: sewing, baking, hairdressing, digital skills",
+        "Microfinance and start-up kits for small businesses",
+        "Mentorship, counselling and support groups",
+        "Monthly assistance for widows and elderly women",
+        "Linkage to markets and income-generating projects"
+      ],
+      "impactStats": [
+        {
+          "value": "70",
+          "label": "Widows Targeted"
+        },
+        {
+          "value": "40",
+          "label": "Single Mothers"
+        },
+        {
+          "value": "20",
+          "label": "Businesses Started"
+        },
+        {
+          "value": "GHS 60k",
+          "label": "Income Generated"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 2
+    },
+    {
+      "id": "house-help-caregiver",
+      "slug": "house-help-caregiver",
+      "title": "House Helps & Home Care Services",
+      "icon": "🏠",
+      "shortDescription": "A hub for reliable, trained caregivers and house helps.",
+      "fullDescription": "We identify and train 30 caregivers/house helps with well-structured professional curricula — functional literacy, first aid, childcare, elderly (geriatrics) care, etiquette and wellbeing — then connect trained, seasoned helpers to households needing cleaning, cooking and home care support.",
+      "features": [
+        "Recruitment and vetting of interested caregivers",
+        "Professional training by specialists",
+        "Functional literacy, first aid, childcare, geriatrics, etiquette",
+        "Life skills and wellbeing training",
+        "Household placement and follow-up support",
+        "Future hub for supply of home helps"
+      ],
+      "impactStats": [
+        {
+          "value": "30",
+          "label": "Caregivers Targeted"
+        },
+        {
+          "value": "6",
+          "label": "Training Modules"
+        },
+        {
+          "value": "100%",
+          "label": "Vetted & Trained"
+        },
+        {
+          "value": "24/7",
+          "label": "Home Support Model"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 3
+    },
+    {
+      "id": "education-child-development",
+      "slug": "education-child-development",
+      "title": "Education & Child Development",
+      "icon": "📚",
+      "shortDescription": "Accessible, quality education and skills training for every child.",
+      "fullDescription": "Education is our core intervention for breaking cycles of poverty. We liaise with headmasters and school management, run exposure visits and empowerment workshops, and use creatively designed counselling to ensure vulnerable children catch up with peers and secure meaningful employment or entrepreneurship.",
+      "features": [
+        "Liaison with schools for targeted interventions",
+        "Exposure visits for visibility and aspiration",
+        "Awareness creation and empowerment workshops",
+        "Counselling for children, students and widows",
+        "Support for youth trade and apprenticeship",
+        "Digital skills for employability in the digital economy"
+      ],
+      "impactStats": [
+        {
+          "value": "150",
+          "label": "Orphans: Education & Vocational (Strategic)"
+        },
+        {
+          "value": "5",
+          "label": "At Tertiary Now"
+        },
+        {
+          "value": "70%",
+          "label": "Self-Esteem Increase"
+        },
+        {
+          "value": "5yrs",
+          "label": "Programme Duration"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 4
+    },
+    {
+      "id": "healthcare-wellbeing",
+      "slug": "healthcare-wellbeing",
+      "title": "Healthcare & Wellbeing",
+      "icon": "🩺",
+      "shortDescription": "Health care support and psychosocial healing for vulnerable groups.",
+      "fullDescription": "Vulnerable people are supported in provision of health care. We integrate basic caregiving, art & therapy and community counselling so that orphans and widows not only survive but thrive — physically, emotionally and spiritually.",
+      "features": [
+        "Health care provision and referral",
+        "40 orphans in art/music therapy sessions",
+        "30 widows/single mothers receiving counselling",
+        "Psychological support and support groups (70 beneficiaries)",
+        "Community outreach and stigma reduction events",
+        "First aid and life-skills wellbeing training"
+      ],
+      "impactStats": [
+        {
+          "value": "40",
+          "label": "Art/Music Therapy"
+        },
+        {
+          "value": "30",
+          "label": "Counselling (Widows)"
+        },
+        {
+          "value": "70",
+          "label": "In Support Groups"
+        },
+        {
+          "value": "4",
+          "label": "Community Events"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 5
+    },
+    {
+      "id": "economic-empowerment",
+      "slug": "economic-empowerment",
+      "title": "Economic Empowerment",
+      "icon": "💪",
+      "shortDescription": "Micro-business development and sustainable livelihoods.",
+      "fullDescription": "We support women and youth to establish micro-businesses and income-generating projects with training, mentoring and start-up kits. The goal is economic independence through sustainable livelihoods that allow families to contribute to community and national development.",
+      "features": [
+        "Micro-business establishment support",
+        "Start-up kits and financial provision",
+        "Vocational training: sewing, baking, hairdressing, computer",
+        "Digital skills for the digital economy",
+        "Partnerships with gov, private sector & CSOs to leverage resources",
+        "Income-generating activities for Foundation sustainability"
+      ],
+      "impactStats": [
+        {
+          "value": "40",
+          "label": "Women Vocationally Trained"
+        },
+        {
+          "value": "50",
+          "label": "Widows/Mothers in Entrepreneurship"
+        },
+        {
+          "value": "200",
+          "label": "Beneficiaries Sensitized"
+        },
+        {
+          "value": "∞",
+          "label": "Sustainable Impact Goal"
+        }
+      ],
+      "gallery": [],
+      "isActive": true,
+      "order": 6
+    }
+  ],
+  "stories": [
+    {
+      "id": "1",
+      "slug": "orphan-scholarship-80-supported",
+      "title": "80 Orphans Receiving Scholarships — Hope Restored",
+      "excerpt": "Through the Love of Jesus, 80 children now have books, tutoring and school support from pre-school to tertiary. Five are at tertiary level today.",
+      "content": "Full story of scholarship distribution in Lower Manya Krobo...",
+      "featuredImage": "/images/stories/scholarship.jpg",
+      "author": {
+        "name": "Lawer and Lawers Team",
+        "avatar": ""
+      },
+      "category": "education",
+      "tags": [
+        "orphan",
+        "education",
+        "scholarship"
+      ],
+      "publishedAt": "2024-01-15",
+      "updatedAt": "2024-01-15",
+      "isFeatured": true,
+      "readTime": 5
+    },
+    {
+      "id": "2",
+      "slug": "widows-micro-business-ghs60k",
+      "title": "20 Widows Start Businesses — GHS 60,000 Income Generated",
+      "excerpt": "Sewing, baking, hairdressing and digital skills turned into sustainable micro-businesses for 20 widows and single mothers.",
+      "content": "Women now run their own enterprises...",
+      "featuredImage": "/images/stories/women-business.jpg",
+      "author": {
+        "name": "Lawer and Lawers Team",
+        "avatar": ""
+      },
+      "category": "community",
+      "tags": [
+        "widows",
+        "micro-business",
+        "empowerment"
+      ],
+      "publishedAt": "2024-01-10",
+      "updatedAt": "2024-01-10",
+      "isFeatured": true,
+      "readTime": 4
+    },
+    {
+      "id": "3",
+      "slug": "caregiver-hub-30-trained",
+      "title": "30 Caregivers Trained in Childcare & Geriatrics",
+      "excerpt": "Our caregiver hub trains house helps in first aid, childcare, elderly care and etiquette — connecting them to households needing reliable support.",
+      "content": "Professional training by specialists...",
+      "featuredImage": "/images/stories/caregiver.jpg",
+      "author": {
+        "name": "Care Team",
+        "avatar": ""
+      },
+      "category": "education",
+      "tags": [
+        "caregiver",
+        "training",
+        "house help"
+      ],
+      "publishedAt": "2024-01-05",
+      "updatedAt": "2024-01-05",
+      "isFeatured": false,
+      "readTime": 3
+    },
+    {
+      "id": "4",
+      "slug": "art-therapy-40-orphans",
+      "title": "Art & Music Therapy Heals 40 Orphans",
+      "excerpt": "Healing through art, music and sports — 40 orphans express, connect and rebuild self-esteem.",
+      "content": "Therapy sessions...",
+      "featuredImage": "/images/stories/art-therapy.jpg",
+      "author": {
+        "name": "Counselling Team",
+        "avatar": ""
+      },
+      "category": "community",
+      "tags": [
+        "therapy",
+        "orphans",
+        "wellbeing"
+      ],
+      "publishedAt": "2023-12-28",
+      "updatedAt": "2023-12-28",
+      "isFeatured": false,
+      "readTime": 6
+    }
+  ],
+  "events": [
+    {
+      "id": "1",
+      "slug": "awareness-workshop-manya-krobo-2024",
+      "title": "Empowerment Workshop — Lower Manya Krobo",
+      "description": "Awareness creation and empowerment workshop for orphans, widows and caregivers with exposure and counselling sessions.",
+      "date": "2024-03-15",
+      "time": "09:00 AM",
+      "endTime": "04:00 PM",
+      "location": {
+        "name": "Community Centre",
+        "address": "Lower Manya Krobo",
+        "city": "Eastern Region, Ghana"
+      },
+      "image": "/images/events/workshop.jpg",
+      "isOnline": false,
+      "registrationRequired": true,
+      "registrationLink": "/contact",
+      "category": "workshop",
+      "isFeatured": true,
+      "isPast": false
+    },
+    {
+      "id": "2",
+      "slug": "community-outreach-campaign",
+      "title": "Community Outreach — 200 Sensitized",
+      "description": "Community members sensitized on supporting vulnerable groups — 200 people reached across 4 community events.",
+      "date": "2024-02-20",
+      "time": "10:00 AM",
+      "location": {
+        "name": "Various Communities",
+        "address": "Lower Manya Krobo",
+        "city": "Eastern Region"
+      },
+      "image": "/images/events/outreach.jpg",
+      "isOnline": false,
+      "registrationRequired": false,
+      "category": "campaign",
+      "isFeatured": true,
+      "isPast": false
+    }
+  ],
+  "gallery": [
+    {
+      "id": "1",
+      "title": "Orphan Scholarship Day",
+      "description": "Distributing scholarships, books and counselling to children from pre-school to tertiary.",
+      "type": "image",
+      "url": "/images/gallery/orphan-day.jpg",
+      "thumbnail": "/images/gallery/orphan-day-thumb.jpg",
+      "category": "education",
+      "tags": [
+        "orphan",
+        "education"
+      ],
+      "uploadedAt": "2024-01-15"
+    },
+    {
+      "id": "2",
+      "title": "Widows Skills Training — Sewing & Baking",
+      "description": "Hands-on vocational training for widows and single mothers.",
+      "type": "image",
+      "url": "/images/gallery/skills-training.jpg",
+      "thumbnail": "/images/gallery/skills-training-thumb.jpg",
+      "category": "empowerment",
+      "tags": [
+        "widows",
+        "skills"
+      ],
+      "uploadedAt": "2024-01-10"
+    },
+    {
+      "id": "3",
+      "title": "Caregiver Graduation",
+      "description": "30 caregivers certified in childcare, geriatrics and first aid.",
+      "type": "image",
+      "url": "/images/gallery/caregiver-grad.jpg",
+      "thumbnail": "/images/gallery/caregiver-grad-thumb.jpg",
+      "category": "caregivers",
+      "tags": [
+        "caregiver",
+        "graduation"
+      ],
+      "uploadedAt": "2024-01-05"
+    },
+    {
+      "id": "7",
+      "title": "Art & Therapy in Action",
+      "description": "Video: 40 orphans in art & music therapy sessions promoting healing.",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "thumbnail": "/images/gallery/video-1-thumb.jpg",
+      "category": "videos",
+      "tags": [
+        "therapy",
+        "video"
+      ],
+      "uploadedAt": "2023-12-01"
+    },
+    {
+      "id": "8",
+      "title": "Annual Impact 2023",
+      "description": "Video highlights: 5 at tertiary, many now gainfully employed, GHS 60k generated.",
+      "type": "video",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "thumbnail": "/images/gallery/video-2-thumb.jpg",
+      "category": "videos",
+      "tags": [
+        "impact",
+        "video"
+      ],
+      "uploadedAt": "2023-11-15"
+    }
+  ],
+  "siteContent": [
+    {
+      "id": "home",
+      "hero": {
+        "title": "Empowering Orphans, Widows & Caregivers in Ghana",
+        "subtitle": "Lawer and Lawers Foundation — a Family Support Project since the early 2000s in Lower Manya Krobo, Eastern Region — empowering orphans, widows, single mothers and caregivers through education, skills training, shelter and micro-business support, rooted in the love of Jesus.",
+        "ctaPrimary": "Get Involved",
+        "ctaSecondary": "Learn More"
+      },
+      "mission": {
+        "title": "Our Mission",
+        "text": "To become a premier hub for training, character education and employment in Ghana — empowering vulnerable individuals, especially orphans, widows and single mothers, with skills to secure meaningful employment or start businesses for sustainable livelihoods."
+      },
+      "missionCards": [
+        {
+          "title": "Education & Child Development",
+          "content": "Scholarships, books, tutoring and counselling from pre-school to tertiary — nurturing God-fearing, disciplined children."
+        },
+        {
+          "title": "Economic Empowerment",
+          "content": "Vocational skills — sewing, baking, hairdressing, computer literacy — plus micro-finance and start-up kits for widows & youth."
+        },
+        {
+          "title": "Caregiving & Wellbeing",
+          "content": "Training house helps & caregivers in childcare, geriatrics, first aid, etiquette, health care and art therapy for holistic wellbeing."
+        }
+      ],
+      "whoWeServe": {
+        "title": "Who We Serve",
+        "intro": "In Lower Manya Krobo and beyond, we walk with those left without family safety nets — delivering education, shelter, health care and skills for sustainable livelihoods.",
+        "items": [
+          "Orphans — from pre-school to tertiary (60 targeted)",
+          "Widows & single mothers (40 + 70 targeted)",
+          "Youth seeking trade & apprenticeship",
+          "Aspiring caregivers & house helps (30 targeted)",
+          "Persons with Disabilities (PWDs) & vulnerable households"
+        ]
+      },
+      "supportCTA": {
+        "title": "Your Support Can Shape a Future",
+        "text": "Sponsorship provides education, nutrition, health care, shelter, clothing and financial aid — and trains reliable caregivers for households needing support with cleaning, cooking and care."
+      },
+      "impactStats": [
+        {
+          "number": 200,
+          "suffix": "+",
+          "label": "Beneficiaries (Orphans, Widows, Youth)"
+        },
+        {
+          "number": 80,
+          "suffix": "",
+          "label": "Scholarships & Education Support"
+        },
+        {
+          "number": 40,
+          "suffix": "",
+          "label": "Women with Vocational Skills"
+        },
+        {
+          "number": 200,
+          "suffix": "",
+          "label": "Community Members Sensitized"
+        }
+      ]
+    },
+    {
+      "id": "about",
+      "hero": {
+        "title": "About Lawer and Lawers Foundation",
+        "subtitle": "From a Family Support Project in the early 2000s to a formal Foundation — winning souls for Christ and helping deprived children, especially orphans, in Lower Manya Krobo, Eastern Region, Ghana."
+      },
+      "story": {
+        "title": "Our Story",
+        "paragraphs": [
+          "Started as a Family Support Project providing financial and material support to students — especially secondary and tertiary — and training underprivileged in trades and micro-business for women.",
+          "Today orphans from this project are in various levels of formal and informal education across Ghana, with some studying outside the country."
+        ]
+      },
+      "vision": "To create a world where everyone has access to quality education and skills training, enabling them to acquire the necessary skills and knowledge to succeed in their careers for holistic sustainable livelihood and contribute effectively to economic growth and national development.",
+      "mission": "To become a premier hub for training, character education, and employment opportunities in Ghana, empowering vulnerable individuals, particularly those from disadvantaged background with relevant skills and knowledge to secure meaningful employment or start their own businesses for sustainable livelihoods and to enhance human development."
+    }
+  ],
+  "donations": [
+    {
+      "name": "Ama",
+      "email": "ama@test.com",
+      "amount": 50,
+      "frequency": "once",
+      "status": "pending",
+      "createdAt": "2026-09-01T15:02:52.612Z",
+      "id": "1788274972612-wk8eg",
+      "updatedAt": "2026-09-01T15:02:52.612Z"
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Kwame",
+      "email": "kwame@test.com",
+      "subject": "donation",
+      "message": "hello sponsorship",
+      "status": "new",
+      "createdAt": "2026-09-01T15:02:53.761Z",
+      "id": "1788274973761-l6q0g",
+      "updatedAt": "2026-09-01T15:02:53.761Z"
+    }
+  ]
+}
