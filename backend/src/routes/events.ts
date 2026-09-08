@@ -20,6 +20,8 @@ const schema = z.object({
   category: z.string().default('workshop'),
   isFeatured: z.boolean().default(false),
   isPast: z.boolean().default(false),
+  capacity: z.number().int().positive().default(100),
+  registeredCount: z.number().int().default(0),
 });
 router.get('/', async (req:any,res:any)=>{
   const { category } = req.query;
@@ -46,4 +48,37 @@ router.delete('/:id', requireAuth as any, requireAdmin as any, async (req:any,re
   await db.remove('events', req.params.id);
   res.json({ success:true});
 });
+
+// RSVP Controller — capacity capped, wired to frontend
+const rsvpSchema = z.object({ name: z.string().min(2), email: z.string().email(), phone: z.string().optional(), guests: z.number().int().min(1).default(1) });
+
+router.post('/:id/rsvp', async (req:any,res:any)=>{
+  const event:any = await db.getById('events', req.params.id) || await db.getBySlug('events', req.params.id);
+  if(!event) return res.status(404).json({ success:false, message:'Event not found'});
+  const parsed = rsvpSchema.safeParse(req.body);
+  if(!parsed.success) return res.status(400).json({ success:false, message: parsed.error.issues.map(i=>i.message).join(', ')});
+  const capacity = Number(event.capacity||100);
+  const registered = Number(event.registeredCount||0);
+  if (registered + parsed.data.guests > capacity) return res.status(409).json({ success:false, message:`Event at capacity (${capacity}). Only ${capacity - registered} spots left.`});
+  const rsvps = await db.getAll('rsvps' as any) as any[];
+  const existing = rsvps.find(r=> r.eventId===event.id && r.email===parsed.data.email);
+  if (existing) return res.status(409).json({ success:false, message:'Already registered with this email'});
+  const rsvp = await db.create('rsvps' as any, { eventId: event.id, eventTitle: event.title, ...parsed.data, createdAt: new Date().toISOString() });
+  await db.update('events', event.id, { registeredCount: registered + parsed.data.guests });
+  res.status(201).json({ success:true, data: rsvp });
+});
+
+router.get('/:id/rsvps', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+  const event:any = await db.getById('events', req.params.id) || await db.getBySlug('events', req.params.id);
+  if(!event) return res.status(404).json({ success:false, message:'Event not found'});
+  const all = await db.getAll('rsvps' as any) as any[];
+  const list = all.filter(r=> r.eventId===event.id).sort((a,b)=> new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
+  res.json({ success:true, data: list, meta:{ capacity: event.capacity, registered: event.registeredCount, remaining: Number(event.capacity)-Number(event.registeredCount||0) }});
+});
+
+router.get('/rsvps/all', requireAuth as any, requireAdmin as any, async (_req:any,res:any)=>{
+  const all = await db.getAll('rsvps' as any) as any[];
+  res.json({ success:true, data: all.sort((a,b)=> new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime())});
+});
+
 export default router;

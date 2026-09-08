@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { getFirestore, isFirebaseReady } from './firebase';
 
-export type CollectionName = 'programs' | 'stories' | 'events' | 'gallery' | 'siteContent' | 'donations' | 'contacts';
+export type CollectionName = 'programs' | 'stories' | 'events' | 'gallery' | 'siteContent' | 'donations' | 'contacts' | 'rsvps';
 
 const DATA_DIR = path.join(__dirname, '../data');
 const DATA_FILE = path.join(DATA_DIR, 'db.json');
@@ -19,9 +19,10 @@ function ensureFile() {
       const seed = JSON.parse(fs.readFileSync(p, 'utf-8'));
       if (!seed.donations) seed.donations = [];
       if (!seed.contacts) seed.contacts = [];
+      if (!seed.rsvps) seed.rsvps = [];
       fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2));
     } catch {
-      fs.writeFileSync(DATA_FILE, JSON.stringify({ programs:[], stories:[], events:[], gallery:[], siteContent:[], donations:[], contacts:[] }, null, 2));
+      fs.writeFileSync(DATA_FILE, JSON.stringify({ programs:[], stories:[], events:[], gallery:[], siteContent:[], donations:[], contacts:[], rsvps:[] }, null, 2));
     }
   } else {
     try {
@@ -29,6 +30,7 @@ function ensureFile() {
       let changed=false;
       if (!cur.donations) { cur.donations=[]; changed=true; }
       if (!cur.contacts) { cur.contacts=[]; changed=true; }
+      if (!cur.rsvps) { cur.rsvps=[]; changed=true; }
       if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(cur, null, 2));
     } catch {}
   }
@@ -42,28 +44,60 @@ function writeLocal(data: DbShape) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+function isFirestoreNotFound(err:any){
+  return err?.code===5 || err?.code==='NOT_FOUND' || /NOT_FOUND|5 NOT_FOUND/i.test(String(err?.message||''));
+}
+
 export const db = {
   async getAll(name: CollectionName) {
     if (isFirebaseReady()) {
-      const snap = await getFirestore()!.collection(name).get();
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      try{
+        const snap = await getFirestore()!.collection(name).get();
+        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (data.length===0){
+          const local = readLocal()[name] || [];
+          if (local.length) return local;
+        }
+        return data;
+      }catch(e:any){
+        if(isFirestoreNotFound(e)){
+          console.warn(`[db] Firestore NOT_FOUND for ${name} — falling back to local JSON. Create Firestore database in Firebase console or check FIREBASE_PROJECT_ID.`);
+          return readLocal()[name] || [];
+        }
+        throw e;
+      }
     }
     return readLocal()[name] || [];
   },
   async getById(name: CollectionName, id: string) {
     if (isFirebaseReady()) {
-      const doc = await getFirestore()!.collection(name).doc(id).get();
-      return doc.exists ? { id: doc.id, ...doc.data() } : null;
+      try{
+        const doc = await getFirestore()!.collection(name).doc(id).get();
+        if (doc.exists) return { id: doc.id, ...doc.data() };
+        const fallback = (readLocal()[name] || []).find((x: any) => x.id === id || x.slug === id) || null;
+        return fallback;
+      }catch(e:any){
+        if(isFirestoreNotFound(e)) return (readLocal()[name] || []).find((x: any) => x.id === id || x.slug === id) || null;
+        throw e;
+      }
     }
     const local = readLocal()[name] || [];
     return local.find((x: any) => x.id === id || x.slug === id) || null;
   },
   async getBySlug(name: CollectionName, slug: string) {
     if (isFirebaseReady()) {
-      const snap = await getFirestore()!.collection(name).where('slug', '==', slug).limit(1).get();
-      if (snap.empty) return null;
-      const d = snap.docs[0];
-      return { id: d.id, ...d.data() };
+      try{
+        const snap = await getFirestore()!.collection(name).where('slug', '==', slug).limit(1).get();
+        if (snap.empty) {
+          const fallback = (readLocal()[name] || []).find((x: any) => x.slug === slug) || null;
+          return fallback;
+        }
+        const d = snap.docs[0];
+        return { id: d.id, ...d.data() };
+      }catch(e:any){
+        if(isFirestoreNotFound(e)) return (readLocal()[name] || []).find((x: any) => x.slug === slug) || null;
+        throw e;
+      }
     }
     const local = readLocal()[name] || [];
     return local.find((x: any) => x.slug === slug) || null;
@@ -72,8 +106,14 @@ export const db = {
     const id = data.id || `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
     const payload = { ...data, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     if (isFirebaseReady()) {
-      await getFirestore()!.collection(name).doc(id).set(payload);
-      return payload;
+      try{
+        await getFirestore()!.collection(name).doc(id).set(payload);
+        return payload;
+      }catch(e:any){
+        if(isFirestoreNotFound(e)){
+          console.warn(`[db] Firestore NOT_FOUND on create ${name} — using local JSON`);
+        } else throw e;
+      }
     }
     const local = readLocal();
     local[name] = [...(local[name] || []), payload];
@@ -82,9 +122,15 @@ export const db = {
   },
   async update(name: CollectionName, id: string, data: any) {
     if (isFirebaseReady()) {
-      await getFirestore()!.collection(name).doc(id).set({ ...data, updatedAt: new Date().toISOString() }, { merge: true });
-      const doc = await getFirestore()!.collection(name).doc(id).get();
-      return { id: doc.id, ...doc.data() };
+      try{
+        await getFirestore()!.collection(name).doc(id).set({ ...data, updatedAt: new Date().toISOString() }, { merge: true });
+        const doc = await getFirestore()!.collection(name).doc(id).get();
+        return { id: doc.id, ...doc.data() };
+      }catch(e:any){
+        if(isFirestoreNotFound(e)){
+          console.warn(`[db] Firestore NOT_FOUND on update ${name} — using local JSON`);
+        } else throw e;
+      }
     }
     const local = readLocal();
     local[name] = (local[name] || []).map((x: any) => x.id === id ? { ...x, ...data, updatedAt: new Date().toISOString() } : x);
@@ -93,8 +139,14 @@ export const db = {
   },
   async remove(name: CollectionName, id: string) {
     if (isFirebaseReady()) {
-      await getFirestore()!.collection(name).doc(id).delete();
-      return true;
+      try{
+        await getFirestore()!.collection(name).doc(id).delete();
+        return true;
+      }catch(e:any){
+        if(isFirestoreNotFound(e)){
+          console.warn(`[db] Firestore NOT_FOUND on delete ${name} — using local JSON`);
+        } else throw e;
+      }
     }
     const local = readLocal();
     local[name] = (local[name] || []).filter((x: any) => x.id !== id);

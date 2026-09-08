@@ -12,9 +12,11 @@ const schema = zod_1.z.object({
     amount: zod_1.z.number().positive().optional(),
     amountGHS: zod_1.z.union([zod_1.z.number(), zod_1.z.string()]).optional(),
     program: zod_1.z.string().optional(),
+    campaign: zod_1.z.string().optional(),
     frequency: zod_1.z.enum(['once', 'monthly']).default('once'),
     message: zod_1.z.string().optional(),
     method: zod_1.z.string().optional(),
+    paymentStatus: zod_1.z.enum(['pending', 'succeeded', 'failed', 'refunded']).default('pending'),
 });
 router.post('/', async (req, res) => {
     const body = { ...req.body };
@@ -25,9 +27,27 @@ router.post('/', async (req, res) => {
     const parsed = schema.safeParse(body);
     if (!parsed.success)
         return res.status(400).json({ success: false, message: parsed.error.issues.map(i => i.message).join(', ') });
-    const payload = { ...parsed.data, status: 'pending', createdAt: new Date().toISOString() };
+    const payload = { ...parsed.data, donorName: parsed.data.name, campaign: parsed.data.campaign || parsed.data.program || 'General', paymentStatus: parsed.data.paymentStatus || 'pending', status: parsed.data.paymentStatus || 'pending', createdAt: new Date().toISOString() };
     const created = await db_1.db.create('donations', payload);
     res.status(201).json({ success: true, data: created });
+});
+// Payment gateway webhook — read-only ledger is fed from here
+router.post('/webhook', async (req, res) => {
+    const { donorName, name, email, amount, campaign, transactionId, status } = req.body;
+    const payload = {
+        donorName: donorName || name || 'Anonymous',
+        name: donorName || name || 'Anonymous',
+        email: email || 'unknown@example.com',
+        amount: Number(amount || 0),
+        campaign: campaign || 'General',
+        transactionId: transactionId || `txn_${Date.now()}`,
+        paymentStatus: status || 'succeeded',
+        status: status || 'succeeded',
+        gateway: req.body.gateway || 'mock',
+        createdAt: new Date().toISOString()
+    };
+    const created = await db_1.db.create('donations', payload);
+    res.json({ success: true, data: created });
 });
 router.get('/', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
     let data = await db_1.db.getAll('donations');

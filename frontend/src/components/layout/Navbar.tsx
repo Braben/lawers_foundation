@@ -21,7 +21,10 @@ const programsDropdown = {
       href: "/programs#house-help-caregiver",
       label: "House Helps & Caregivers",
     },
-    { href: "/programs#education-child-development", label: "Education & Child Development" },
+    {
+      href: "/programs#education-child-development",
+      label: "Education & Child Development",
+    },
     { href: "/programs#healthcare-wellbeing", label: "Healthcare & Wellbeing" },
     { href: "/programs#economic-empowerment", label: "Economic Empowerment" },
   ],
@@ -179,7 +182,7 @@ export function Navbar() {
               className="w-20 h-20 md:w-32 md:h-32 object-contain"
               loading="eager"
             />
-            Lawer and Lawers Foundation
+            {/* Lawer and Lawers Foundation */}
           </Link>
 
           <button
@@ -265,7 +268,12 @@ export function Navbar() {
               </Link>
             </li>
             <li suppressHydrationWarning>
-              <Link href="/admin" className="text-xs text-[#2C5F2D] hover:underline font-medium px-2 py-1 border border-[#2C5F2D] rounded">Admin</Link>
+              <Link
+                href="/admin"
+                className="text-xs text-[#2C5F2D] hover:underline font-medium px-2 py-1 border border-[#2C5F2D] rounded"
+              >
+                Admin
+              </Link>
             </li>
           </ul>
         </nav>

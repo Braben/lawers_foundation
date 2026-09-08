@@ -11,9 +11,11 @@ const schema = z.object({
   amount: z.number().positive().optional(),
   amountGHS: z.union([z.number(), z.string()]).optional(),
   program: z.string().optional(),
+  campaign: z.string().optional(),
   frequency: z.enum(['once','monthly']).default('once'),
   message: z.string().optional(),
   method: z.string().optional(),
+  paymentStatus: z.enum(['pending','succeeded','failed','refunded']).default('pending'),
 });
 
 router.post('/', async (req:any,res:any)=>{
@@ -22,9 +24,28 @@ router.post('/', async (req:any,res:any)=>{
   if (typeof body.amountGHS === 'string') body.amount = Number(body.amountGHS);
   const parsed = schema.safeParse(body);
   if(!parsed.success) return res.status(400).json({ success:false, message: parsed.error.issues.map(i=>i.message).join(', ')});
-  const payload:any = { ...parsed.data, status:'pending', createdAt: new Date().toISOString() };
+  const payload:any = { ...parsed.data, donorName: parsed.data.name, campaign: parsed.data.campaign || parsed.data.program || 'General', paymentStatus: parsed.data.paymentStatus || 'pending', status: parsed.data.paymentStatus || 'pending', createdAt: new Date().toISOString() };
   const created = await db.create('donations' as any, payload);
   res.status(201).json({ success:true, data: created });
+});
+
+// Payment gateway webhook — read-only ledger is fed from here
+router.post('/webhook', async (req:any,res:any)=>{
+  const { donorName, name, email, amount, campaign, transactionId, status } = req.body;
+  const payload:any = {
+    donorName: donorName || name || 'Anonymous',
+    name: donorName || name || 'Anonymous',
+    email: email || 'unknown@example.com',
+    amount: Number(amount||0),
+    campaign: campaign || 'General',
+    transactionId: transactionId || `txn_${Date.now()}`,
+    paymentStatus: status || 'succeeded',
+    status: status || 'succeeded',
+    gateway: req.body.gateway || 'mock',
+    createdAt: new Date().toISOString()
+  };
+  const created = await db.create('donations' as any, payload);
+  res.json({ success:true, data: created });
 });
 
 router.get('/', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{

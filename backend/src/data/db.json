@@ -41,7 +41,7 @@
       "id": "women-empowerment",
       "slug": "women-empowerment",
       "title": "Women's Empowerment Program",
-      "icon": "👩‍💼",
+      "icon": "",
       "shortDescription": "Entrepreneurship training and micro-finance for widows and single mothers.",
       "fullDescription": "We train and support 50 widows and single mothers in entrepreneurship and vocational trades — sewing, baking, hairdressing, computer and digital literacy — then provide start-up kits and micro-finance to launch sustainable micro-businesses. Counselling and support groups foster resilience and self-esteem.",
       "features": [
@@ -78,7 +78,7 @@
       "id": "house-help-caregiver",
       "slug": "house-help-caregiver",
       "title": "House Helps & Home Care Services",
-      "icon": "🏠",
+      "icon": "",
       "shortDescription": "A hub for reliable, trained caregivers and house helps.",
       "fullDescription": "We identify and train 30 caregivers/house helps with well-structured professional curricula — functional literacy, first aid, childcare, elderly (geriatrics) care, etiquette and wellbeing — then connect trained, seasoned helpers to households needing cleaning, cooking and home care support.",
       "features": [
@@ -115,7 +115,7 @@
       "id": "education-child-development",
       "slug": "education-child-development",
       "title": "Education & Child Development",
-      "icon": "📚",
+      "icon": "",
       "shortDescription": "Accessible, quality education and skills training for every child.",
       "fullDescription": "Education is our core intervention for breaking cycles of poverty. We liaise with headmasters and school management, run exposure visits and empowerment workshops, and use creatively designed counselling to ensure vulnerable children catch up with peers and secure meaningful employment or entrepreneurship.",
       "features": [
@@ -189,7 +189,7 @@
       "id": "economic-empowerment",
       "slug": "economic-empowerment",
       "title": "Economic Empowerment",
-      "icon": "💪",
+      "icon": "",
       "shortDescription": "Micro-business development and sustainable livelihoods.",
       "fullDescription": "We support women and youth to establish micro-businesses and income-generating projects with training, mentoring and start-up kits. The goal is economic independence through sustainable livelihoods that allow families to contribute to community and national development.",
       "features": [
@@ -510,5 +510,6 @@
     }
   ],
   "donations": [],
-  "contacts": []
+  "contacts": [],
+  "rsvps": []
 }

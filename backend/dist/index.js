@@ -33,10 +33,20 @@ app.use('/api/content', content_1.default);
 app.use('/api/upload', upload_1.default);
 app.use('/api/donations', donations_1.default);
 app.use('/api/contacts', contacts_1.default);
+const admin_1 = __importDefault(require("./routes/admin"));
+const rbac_1 = require("./middleware/rbac");
+app.use('/api/admin', admin_1.default);
+app.get('/api/auth/role', (req, res) => {
+    const user = req.user;
+    if (!user)
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    res.json({ success: true, data: { email: user.email, role: (0, rbac_1.getUserRole)(user.email) } });
+});
 app.use('/api/auth/me', (req, res) => {
     if (!req.user)
         return res.status(401).json({ success: false, message: 'Not authenticated' });
-    res.json({ success: true, data: req.user });
+    const role = (0, rbac_1.getUserRole)(req.user.email);
+    res.json({ success: true, data: { ...req.user, role } });
 });
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Not found' }));
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

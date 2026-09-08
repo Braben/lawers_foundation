@@ -33,10 +33,18 @@ app.use('/api/content', content);
 app.use('/api/upload', upload);
 app.use('/api/donations', donations);
 app.use('/api/contacts', contacts);
-
+import adminStats from './routes/admin';
+import { getUserRole } from './middleware/rbac';
+app.use('/api/admin', adminStats);
+app.get('/api/auth/role', (req:any,res)=>{
+  const user = (req as any).user;
+  if(!user) return res.status(401).json({success:false,message:'Not authenticated'});
+  res.json({success:true, data:{ email:user.email, role: getUserRole(user.email) }});
+});
 app.use('/api/auth/me', (req:any,res)=>{
   if (!req.user) return res.status(401).json({ success:false, message:'Not authenticated'});
-  res.json({ success:true, data:req.user});
+  const role = getUserRole((req as any).user.email);
+  res.json({ success:true, data:{ ...(req as any).user, role }});
 });
 
 app.use((_req,res)=>res.status(404).json({ success:false, message:'Not found'}));

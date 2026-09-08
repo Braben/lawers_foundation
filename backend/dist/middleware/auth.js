@@ -40,9 +40,11 @@ function requireAdmin(req, res, next) {
     if (!user)
         return res.status(401).json({ success: false, message: 'Authentication required' });
     const admins = (process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    if (admins.length === 0)
+    const supers = (process.env.SUPER_ADMINS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const all = [...admins, ...supers].filter(Boolean);
+    if (all.length === 0)
         return next();
-    if (!user.email || !admins.includes(user.email.toLowerCase())) {
+    if (!user.email || !all.includes(user.email.toLowerCase())) {
         return res.status(403).json({ success: false, message: 'Admin access required' });
     }
     next();
