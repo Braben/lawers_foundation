@@ -43,3 +43,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Runtime uploads and generated review reports
+/backend/src/data/uploads/
+/backend/src/data/.legacy-dist-imported
+/frontend/eslint-review.json

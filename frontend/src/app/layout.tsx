@@ -1,3 +1,4 @@
+import { VisitTracker } from '@/components/VisitTracker';
 import { Suspense } from 'react';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -39,9 +40,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  verification: {
-    google: "google-site-verification-code",
-  },
+
 };
 
 function LoadingFallback() {
@@ -65,6 +64,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Navbar />
+          <VisitTracker />
           <Suspense fallback={<LoadingFallback />}>
             <main id="main-content" role="main">
               {children}

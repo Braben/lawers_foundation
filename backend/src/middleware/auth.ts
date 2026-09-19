@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getAuth, isFirebaseReady } from '../config/firebase';
+import { requirePermission } from './rbac';
 
 export interface AuthUser {
   uid: string;
@@ -15,14 +16,10 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   }
   const token = header.split(' ')[1];
   if (!isFirebaseReady()) {
-    try {
-      const payload = JSON.parse(Buffer.from(token.split('.')[1] || '', 'base64').toString());
-      (req as any).user = { uid: payload.sub || payload.user_id || 'mock', email: payload.email } as AuthUser;
-    } catch { (req as any).user = { uid: 'mock', email: 'mock@example.com' }; }
-    return next();
+    return res.status(503).json({ success: false, message: 'Authentication is not configured. Contact the administrator.' });
   }
   try {
-    const decoded = await getAuth()!.verifyIdToken(token);
+    const decoded = await getAuth()!.verifyIdToken(token, true);
     (req as any).user = { uid: decoded.uid, email: decoded.email, name: decoded.name } as AuthUser;
     next();
   } catch (e) {
@@ -31,19 +28,8 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (!(req as any).user) return res.status(401).json({ success: false, message: 'Authentication required. Sign in with Google.' });
+  if (!(req as any).user) return res.status(401).json({ success: false, message: 'Authentication required. Sign in with your staff account.' });
   next();
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  const user = (req as any).user as AuthUser | null;
-  if (!user) return res.status(401).json({ success: false, message: 'Authentication required' });
-  const admins = (process.env.ADMIN_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-  const supers = (process.env.SUPER_ADMINS || '').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
-  const all = [...admins, ...supers].filter(Boolean);
-  if (all.length === 0) return next();
-  if (!user.email || !all.includes(user.email.toLowerCase())) {
-    return res.status(403).json({ success: false, message: 'Admin access required' });
-  }
-  next();
-}
+export const requireAdmin = requirePermission('staff.manage');

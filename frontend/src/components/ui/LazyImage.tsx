@@ -2,20 +2,30 @@
 
 import { useState, useRef, useEffect, ImgHTMLAttributes } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
-interface LazyImageProps extends ImgHTMLAttributes<HTMLImageElement> {
+interface LazyImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'width' | 'height'> {
+  src?: string;
+  width?: number;
+  height?: number;
   placeholder?: string;
   aspectRatio?: 'square' | 'video' | 'portrait' | 'auto';
 }
 
-export function LazyImage({
+export function LazyImage(props: LazyImageProps) {
+  return <ImageWithFallback key={props.src} {...props} />;
+}
+
+function ImageWithFallback({
   src,
   alt,
-  placeholder = '/images/placeholder.jpg',
+  placeholder = '/images/impact.jpg',
   aspectRatio = 'auto',
   className = '',
-  ...props
+  width = 1200, height = 800, onError, onLoad, ...props
 }: LazyImageProps) {
+  const [failed, setFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
@@ -51,13 +61,15 @@ export function LazyImage({
       className={`relative overflow-hidden bg-[#EDF4F2] ${aspectRatios[aspectRatio]} ${className}`}
     >
       {isInView ? (
-        <img
-          src={src}
-          alt={alt}
+        <Image
+          unoptimized width={width} height={height}
+          src={failed ? placeholder : src && /^(https?:\/\/|\/(?!\/))/.test(src) ? src : placeholder}
+          alt={alt || ""}
           className={`w-full h-full object-cover transition-opacity duration-500 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
-          onLoad={() => setIsLoaded(true)}
+          onLoad={event => { setIsLoaded(true); onLoad?.(event); }}
+          onError={event => { if (failed) { setFallbackFailed(true); setIsLoaded(true); } else setFailed(true); onError?.(event); }}
           loading="lazy"
           decoding="async"
           {...props}
@@ -68,6 +80,7 @@ export function LazyImage({
         </div>
       )}
       
+      {fallbackFailed && <span className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">Image unavailable</span>}
       {!isLoaded && isInView && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#EDF4F2]">
           <div className="w-8 h-8 border-2 border-[#2C5F2D] border-t-transparent rounded-full animate-spin" />
@@ -77,7 +90,7 @@ export function LazyImage({
   );
 }
 
-interface AnimatedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
+interface AnimatedImageProps extends LazyImageProps {
   hoverEffect?: boolean;
 }
 
@@ -94,7 +107,7 @@ export function AnimatedImage({
       whileHover={hoverEffect ? { scale: 1.05 } : {}}
       transition={{ duration: 0.3 }}
     >
-      <img
+      <LazyImage
         src={src}
         alt={alt}
         className="w-full h-full object-cover"

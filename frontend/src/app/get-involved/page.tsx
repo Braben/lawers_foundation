@@ -1,8 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { errorMessage } from '@/lib/api';
+import { useEffect, useState } from 'react';
 import { Container, Section, Heading, Text, Card, CardTitle, CardContent, Button } from '@/components/ui';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import type { CurrencySettings } from '@/types';
 
 const involvementOptions = [
   {
@@ -27,6 +29,9 @@ const involvementOptions = [
 
 export default function GetInvolvedPage() {
   const [donation, setDonation] = useState({ name:'', email:'', phone:'', amount:'', program:'orphan-support', frequency:'once', message:'' });
+  const [currencies,setCurrencies]=useState<CurrencySettings|null>(null);
+  const [currency,setCurrency]=useState('');
+  useEffect(()=>{api.getCurrencies().then(settings=>{setCurrencies(settings);setCurrency(settings.defaultCurrency);}).catch(e=>setDonateErr(errorMessage(e)));},[]);
   const [donating, setDonating] = useState(false);
   const [donateMsg, setDonateMsg] = useState('');
   const [donateErr, setDonateErr] = useState('');
@@ -35,10 +40,10 @@ export default function GetInvolvedPage() {
     e.preventDefault();
     setDonateMsg(''); setDonateErr(''); setDonating(true);
     try{
-      await api.createDonation({ name: donation.name, email: donation.email, phone: donation.phone, amount: Number(donation.amount), program: donation.program, frequency: donation.frequency, message: donation.message });
-      setDonateMsg('Thank you! Your donation intent was received. We will contact you for payment confirmation within 24 hours.');
+      await api.createDonation({ name: donation.name, email: donation.email, phone: donation.phone, amount: Number(donation.amount), currency, program: donation.program, frequency: donation.frequency, message: donation.message });
+      setDonateMsg('Thank you! Your pledge was received. Please contact the administrator using the link below for payment details. No payment has been collected.');
       setDonation({ name:'', email:'', phone:'', amount:'', program:'orphan-support', frequency:'once', message:'' });
-    }catch(er:any){ setDonateErr(er.message || 'Failed to submit donation'); }
+    }catch(er: unknown){ setDonateErr(errorMessage(er) || 'Failed to submit donation'); }
     finally{ setDonating(false); }
   };
 
@@ -85,8 +90,9 @@ export default function GetInvolvedPage() {
       <Section background="neutral" id="donate-form">
         <Container>
           <Heading level={2} align="center">Donate / Sponsor</Heading>
-          <Text className="text-center mt-2 max-w-2xl mx-auto">Wired to <code>POST /api/donations</code> — stored in backend database (Firestore or local JSON). Supports GHS amounts, program allocation and frequency.</Text>
+          <Text className="text-center mt-2 max-w-2xl mx-auto">Leave a donation pledge, then contact our administrator for payment details. Payments are arranged directly with the foundation.</Text>
           <form onSubmit={handleDonate} className="max-w-2xl mx-auto mt-8 bg-white rounded-xl shadow p-6 space-y-4">
+            <label className="block text-sm font-medium">Currency<select required disabled={!currencies} value={currency} onChange={e=>setCurrency(e.target.value)} className="block mt-1 w-full px-4 py-2 border rounded-lg"><option value="" disabled>Select currency</option>{currencies?.currencies.map(c=><option key={c.code} value={c.code}>{c.code} — {c.name}</option>)}</select></label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Full Name *</label>
@@ -103,8 +109,8 @@ export default function GetInvolvedPage() {
                 <input value={donation.phone} onChange={e=>setDonation({...donation, phone:e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2C5F2D]" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Amount (GHS) *</label>
-                <input required type="number" min="1" value={donation.amount} onChange={e=>setDonation({...donation, amount:e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2C5F2D]" />
+                <label className="block text-sm font-medium mb-1">Amount ({currency}) *</label>
+                <input required type="number" min="0.001" step={currency ? 1 / 10 ** (new Intl.NumberFormat('en', { style:'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2) : 0.01} value={donation.amount} onChange={e=>setDonation({...donation, amount:e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2C5F2D]" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,10 +137,10 @@ export default function GetInvolvedPage() {
               <label className="block text-sm font-medium mb-1">Message (optional)</label>
               <textarea rows={3} value={donation.message} onChange={e=>setDonation({...donation, message:e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2C5F2D]" />
             </div>
-            <Button type="submit" disabled={donating} className="w-full">{donating ? 'Submitting...' : 'Submit Donation'}</Button>
+            <Button type="submit" disabled={donating || !currencies || !currency} className="w-full">{donating ? 'Submitting...' : 'Submit Pledge'}</Button>
             {donateMsg && <Text className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">{donateMsg}</Text>}
             {donateErr && <Text className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{donateErr}</Text>}
-            <Text className="text-xs text-gray-500 text-center">Backend: POST {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/donations — admin views via GET /api/donations (auth required)</Text>
+            <Text className="text-xs text-gray-500 text-center"><Link href="/contact?subject=donation" className="underline">Contact the administrator for payment details</Link>. We do not collect payments on this website.</Text>
           </form>
         </Container>
       </Section>

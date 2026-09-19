@@ -1,7 +1,8 @@
-import { Router } from 'express';
+import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
-import { requireAuth, requireAdmin } from '../middleware/auth';
-const router = Router();
+import { requireAuth } from '../middleware/auth';
+import { requirePermission } from '../middleware/rbac';
+const router = asyncRouter();
 
 router.get('/:id', async (req:any,res:any)=>{
   const item = await db.getById('siteContent', req.params.id);
@@ -12,7 +13,7 @@ router.get('/', async (req:any,res:any)=>{
   const data = await db.getAll('siteContent');
   res.json({ success:true, data});
 });
-router.put('/:id', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+router.put('/:id', requireAuth as any, requirePermission('content.manage') as any, async (req:any,res:any)=>{
   const existing = await db.getById('siteContent', req.params.id);
   if (!existing) {
     const created = await db.create('siteContent', { id: req.params.id, ...req.body });

@@ -75,10 +75,10 @@ const FALLBACK = {
 };
 
 export default function Home() {
-  const [data, setData] = useState<any>(FALLBACK);
+  const [data, setData] = useState(FALLBACK);
   useEffect(() => {
     api
-      .getContent("home")
+      .getContent<typeof FALLBACK>("home")
       .then(setData)
       .catch(() => {});
   }, []);
@@ -142,7 +142,7 @@ export default function Home() {
           </div>
           <Stagger delay={0.1}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {data.missionCards.map((c: any, i: number) => (
+              {data.missionCards.map((c, i) => (
                 <StaggerItem key={c.title}>
                   <ScaleIn delay={i * 0.1}>
                     <Card className="h-full">
@@ -241,7 +241,7 @@ export default function Home() {
             </Heading>
           </FadeIn>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-8">
-            {data.impactStats.map((stat: any, index: number) => (
+            {data.impactStats.map((stat, index) => (
               <FadeIn key={stat.label} delay={0.1 * index}>
                 <div className="text-center">
                   <div className="text-4xl md:text-5xl font-bold text-[#2C5F2D]">

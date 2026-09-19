@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Container, Section, Heading, Text, Button } from "@/components/ui";
+import { Container, Section, Heading, Text, Button, LazyImage } from "@/components/ui";
 import { GalleryItem } from "@/types";
 import { api } from "@/lib/api";
-import Image from "next/image";
+import Link from "next/link";
+import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import { errorMessage } from "@/lib/api";
 
 const categories = [
   { id: "all", name: "All" },
@@ -11,66 +13,39 @@ const categories = [
   { id: "empowerment", name: "Empowerment" },
   { id: "caregivers", name: "Caregivers" },
   { id: "videos", name: "Videos" },
+  { id: "community", name: "Community" },
 ];
-
-const FALLBACK: GalleryItem[] = [
-  {
-    id: "1",
-    title: "Orphan Scholarship Day",
-    description: "Distributing scholarships, books and counselling",
-    type: "image",
-    url: "/images/gallery/gallery_1.jpg",
-    thumbnail: "/images/gallery/gallery_1.jpg",
-    category: "education",
-    tags: ["orphan"],
-    uploadedAt: "2024-01-15",
-  },
-  {
-    id: "7",
-    title: "Art & Therapy in Action",
-    description: "Video: 40 orphans in art & music therapy",
-    type: "video",
-    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    thumbnail: "/images/gallery/video-1-thumb.jpg",
-    category: "videos",
-    tags: ["therapy", "video"],
-    uploadedAt: "2023-12-01",
-  },
-];
-
-function getYoutubeId(url: string) {
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
-  return m ? m[1] : null;
-}
 
 export default function GalleryPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
-  const [items, setItems] = useState<GalleryItem[]>(FALLBACK);
+  const [items, setItems] = useState<GalleryItem[]>([]);
+  const [error, setError] = useState('');
   useEffect(() => {
-    api
-      .getGallery(activeCategory)
-      .then((d) => {
-        if (d?.length) setItems(d);
-        else if (activeCategory === "all") setItems(FALLBACK);
-        else setItems([]);
-      })
-      .catch(() => {});
+    let active = true;
+    api.getGallery(activeCategory).then(data => { if (active) { setItems(data); setError(''); } }).catch(e => { if (active) { setItems([]); setError(errorMessage(e)); } });
+    return () => { active = false; };
   }, [activeCategory]);
+  useEffect(() => {
+    if (!selectedItem) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedItem(null); };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [selectedItem]);
   const filteredItems = items;
   const images = filteredItems.filter((item) => item.type === "image");
   const videos = filteredItems.filter((item) => item.type === "video");
 
   return (
     <>
+      {error && <p role="alert" className="p-4 text-center">{error}</p>}
       <Section background="primary">
         <Container>
           <Heading level={1} className="text-white">
             Gallery
           </Heading>
           <Text size="lg" color="light" className="mt-4 max-w-2xl">
-            Explore photos and videos from our programs — videos are links only;
-            thumbnails & descriptions are set by admin when posting.
+            Explore photos and videos from our programs and community activities.
           </Text>
         </Container>
       </Section>
@@ -87,6 +62,7 @@ export default function GalleryPage() {
               </button>
             ))}
           </div>
+          {!items.length && !error && <Text className="text-center">No gallery items in this category yet.</Text>}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item) => (
               <button
@@ -97,24 +73,14 @@ export default function GalleryPage() {
               >
                 {item.type === "image" ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    {/* <img
-                      src={item.url || item.thumbnail}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    /> */}
-                    <Image
+                    <LazyImage
                       src={item.url || item.thumbnail}
                       alt={item.title}
                       width={400}
                       height={400}
                       className="w-full h-full object-cover"
                     />
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <Text color="muted">Photo</Text>
-                    </span>
+
                   </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-[#2C5F2D]">
@@ -153,15 +119,12 @@ export default function GalleryPage() {
                   className="relative group aspect-square bg-[#EDF4F2] rounded-lg overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2C5F2D]"
                   aria-label={`View ${item.title}`}
                 >
-                  <Image
-                    src={item.url || item.thumbnail}
+                  <LazyImage
+                    src={item.type === "video" ? item.thumbnail : item.url || item.thumbnail}
                     alt={item.title}
                     className="w-full h-full object-cover"
                     width={400}
                     height={400}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
                   />
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                     <Text className="text-white text-center text-sm font-medium">
@@ -189,13 +152,10 @@ export default function GalleryPage() {
                   aria-label={`Play ${item.title}`}
                 >
                   <div className="aspect-video flex items-center justify-center relative">
-                    <img
-                      src={item.url || item.thumbnail}
+                    <LazyImage
+                      src={item.type === "video" ? item.thumbnail : item.url || item.thumbnail}
                       alt=""
                       className="absolute inset-0 w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
                     />
                     <div className="w-16 h-16 rounded-full bg-[#2C5F2D] flex items-center justify-center group-hover:scale-110 transition-transform relative">
                       <svg
@@ -250,7 +210,7 @@ export default function GalleryPage() {
             </button>
             {selectedItem.type === "image" ? (
               <div className="aspect-video bg-[#EDF4F2] flex items-center justify-center overflow-hidden">
-                <img
+                <LazyImage
                   src={selectedItem.url}
                   alt={selectedItem.title}
                   className="w-full h-full object-contain"
@@ -258,23 +218,7 @@ export default function GalleryPage() {
               </div>
             ) : (
               <div className="aspect-video bg-black flex items-center justify-center">
-                {getYoutubeId(selectedItem.url) ? (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${getYoutubeId(selectedItem.url)}`}
-                    title={selectedItem.title}
-                    className="w-full h-full"
-                    allowFullScreen
-                  />
-                ) : (
-                  <a
-                    href={selectedItem.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white underline"
-                  >
-                    Open video link: {selectedItem.url}
-                  </a>
-                )}
+                <VideoPlayer key={selectedItem.id} source={selectedItem.playback} title={selectedItem.title}/>
               </div>
             )}
             <div className="p-6">
@@ -307,9 +251,7 @@ export default function GalleryPage() {
               Have photos or videos? Admin will add videos as links with
               thumbnails & descriptions.
             </Text>
-            <Button variant="primary" size="lg">
-              Submit Media
-            </Button>
+            <Link href="/contact"><Button variant="primary" size="lg">Submit Media</Button></Link>
           </div>
         </Container>
       </Section>

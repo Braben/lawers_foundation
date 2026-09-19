@@ -20,7 +20,7 @@ export function initFirebase() {
     initialized = true;
     console.log('[firebase] admin initialized');
   } else {
-    console.log('[firebase] missing service account env — running in mock mode (no token verification, local JSON store)');
+    console.log('[firebase] missing service account env — Firestore and authentication unavailable');
   }
 }
 

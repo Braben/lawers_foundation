@@ -1,7 +1,7 @@
 'use client';
 import { useRef, useEffect } from 'react';
 
-export function RichTextEditor({ value, onChange, placeholder }: { value: string, onChange:(v:string)=>void, placeholder?:string }) {
+export function RichTextEditor({ value, onChange, placeholder, disabled = false }: { value: string, onChange:(v:string)=>void, placeholder?:string, disabled?:boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(()=>{ if(ref.current && ref.current.innerHTML!==value) ref.current.innerHTML = value; },[value]);
   const cmd = (c:string, v?:string)=>{ document.execCommand(c,false,v); ref.current?.focus(); onChange(ref.current?.innerHTML||''); };
@@ -13,7 +13,7 @@ export function RichTextEditor({ value, onChange, placeholder }: { value: string
           ['• List','insertUnorderedList'],['1. List','insertOrderedList'],
           ['Link','createLink'],['Quote','formatBlock'],
         ].map(([label, c])=>(
-          <button key={label} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>{
+          <button key={label} disabled={disabled} type="button" onMouseDown={e=>e.preventDefault()} onClick={()=>{
             if(c==='createLink'){ const url=prompt('URL'); if(url) cmd(c,url); }
             else if(c==='formatBlock') cmd(c,'blockquote');
             else cmd(c);
@@ -22,7 +22,7 @@ export function RichTextEditor({ value, onChange, placeholder }: { value: string
       </div>
       <div
         ref={ref}
-        contentEditable
+        contentEditable={!disabled}
         suppressContentEditableWarning
         onInput={()=> onChange(ref.current?.innerHTML||'')}
         data-placeholder={placeholder}

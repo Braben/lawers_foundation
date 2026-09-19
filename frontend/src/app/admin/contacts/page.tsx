@@ -1,45 +1,45 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { api, apiFetch, errorMessage } from '@/lib/api';
+import type { Contact } from '@/types';
 
 const TAGS = ['all','Donor','Volunteer','Subscriber','Caregiver','Education','General'];
 
 export default function ContactDirectory() {
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [tag, setTag] = useState('all');
   const [loading, setLoading] = useState(true);
 
-  const load = (t=tag)=>{
-    const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const token = typeof window!=='undefined' ? localStorage.getItem('lf_token') : null;
-    fetch(`${base}/api/contacts${t!=='all'?`?tag=${t}`:''}`, { headers: token?{Authorization:`Bearer ${token}`}:{} as any })
-      .then(r=>r.json()).then(j=> setContacts(j.data||[])).finally(()=> setLoading(false));
-  };
-  useEffect(()=>{ load(tag); },[tag]);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    api.getContacts(tag).then(data => { if (active) setContacts(data); }).catch(e => { if (active) setError(errorMessage(e)); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [tag]);
 
   const exportCsv = ()=>{
-    const base = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    const token = localStorage.getItem('lf_token');
-    const url = `${base}/api/contacts/export/csv${tag!=='all'?`?tag=${tag}`:''}`;
-    fetch(url, { headers: token?{Authorization:`Bearer ${token}`}:{} as any })
+    const url = `/api/contacts/export/csv${tag!=='all'?`?tag=${tag}`:''}`;
+    apiFetch(url)
       .then(r=>r.blob()).then(b=>{
         const u = URL.createObjectURL(b);
         const a=document.createElement('a'); a.href=u; a.download=`contacts${tag!=='all'?'_'+tag:''}.csv`; a.click(); URL.revokeObjectURL(u);
-      });
+      }).catch(e => setError(errorMessage(e)));
   };
 
   return (
     <div className="space-y-4">
+      {error && <p role="alert">{error}</p>}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Contact Directory</h1>
-          <p className="text-sm text-gray-500">CRM Light — auto-tags (Donor/Volunteer/Subscriber) • filtered table • Export CSV wired to <code>GET /api/contacts/export/csv</code></p>
+          <p className="text-sm text-gray-500">Contact inquiries, automatic tags and CSV export.</p>
         </div>
         <button onClick={exportCsv} className="px-4 py-2 rounded-xl bg-[#2C5F2D] text-white text-sm font-semibold shadow">⤓ Export CSV{tag!=='all'?` (${tag})`:''}</button>
       </div>
 
       <div className="flex gap-2 flex-wrap p-1 bg-white rounded-full border w-fit">
         {TAGS.map(t=>(
-          <button key={t} onClick={()=>{ setTag(t); setLoading(true); }} className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize ${tag===t?'bg-[#2C5F2D] text-white':'text-gray-600 hover:bg-gray-50'}`}>{t}</button>
+          <button key={t} onClick={()=>{ if (t !== tag) { setTag(t); setLoading(true); setError(''); } }} className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize ${tag===t?'bg-[#2C5F2D] text-white':'text-gray-600 hover:bg-gray-50'}`}>{t}</button>
         ))}
       </div>
 
@@ -70,7 +70,7 @@ export default function ContactDirectory() {
             </tbody>
           </table>
         </div>
-        {loading ? <div className="p-8 text-center text-sm text-gray-400">Loading…</div> : !contacts.length ? <div className="p-8 text-center text-sm text-gray-400">No contacts for this tag</div> : <div className="px-4 py-3 text-xs text-gray-400 border-t bg-[#F8FAF8]">{contacts.length} contacts • DB query with auto-segmentation</div>}
+        {loading ? <div className="p-8 text-center text-sm text-gray-400">Loading…</div> : !contacts.length ? <div className="p-8 text-center text-sm text-gray-400">No contacts for this tag</div> : <div className="px-4 py-3 text-xs text-gray-400 border-t bg-[#F8FAF8]">{contacts.length} contacts</div>}
       </div>
     </div>
   );

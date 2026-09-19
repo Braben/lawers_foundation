@@ -1,4 +1,4 @@
-import { Container, Section, Heading, Text, Card, CardTitle, CardContent, Button } from '@/components/ui';
+import { Container, Section, Heading, Text, Button } from '@/components/ui';
 
 const programs = [
   {

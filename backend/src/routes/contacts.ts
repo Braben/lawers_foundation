@@ -1,8 +1,9 @@
-import { Router } from 'express';
+import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
-import { requireAuth, requireAdmin } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
+import { requirePermission } from '../middleware/rbac';
 import { z } from 'zod';
-const router = Router();
+const router = asyncRouter();
 
 function autoTags(subject: string, message: string, email: string): string[] {
   const s = `${subject} ${message} ${email}`.toLowerCase();
@@ -34,7 +35,7 @@ router.post('/', async (req:any,res:any)=>{
   res.status(201).json({ success:true, data: created, message: 'Message received. We will respond within 24-48 hours.' });
 });
 
-router.get('/', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+router.get('/', requireAuth as any, requirePermission('contacts.view') as any, async (req:any,res:any)=>{
   const { tag } = req.query;
   let data = await db.getAll('contacts' as any) as any[];
   if (tag && tag!=='all') data = data.filter(d=> (d.tags||[]).includes(tag));
@@ -42,25 +43,30 @@ router.get('/', requireAuth as any, requireAdmin as any, async (req:any,res:any)
   res.json({ success:true, data });
 });
 
-router.get('/export/csv', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+router.get('/export/csv', requireAuth as any, requirePermission('contacts.view') as any, async (req:any,res:any)=>{
   const { tag } = req.query;
   let data = await db.getAll('contacts' as any) as any[];
   if (tag && tag!=='all') data = data.filter(d=> (d.tags||[]).includes(tag));
   const header = ['Name','Email','Phone','Subject','Message','Tags','CreatedAt'];
-  const rows = data.map(d=> [d.name, d.email, d.phone||'', d.subject, `"${String(d.message).replace(/"/g,'""')}"`, (d.tags||[]).join('|'), d.createdAt].map(v=> `"${String(v).replace(/"/g,'""')}"`).join(','));
+  const cell = (value: unknown) => {
+    const text = String(value ?? '');
+    const safe = /^[=+@\-\t\r\n]/.test(text) ? "'" + text : text;
+    return '"' + safe.replace(/"/g, '""') + '"';
+  };
+  const rows = data.map(d => [d.name, d.email, d.phone, d.subject, d.message, (d.tags || []).join('|'), d.createdAt].map(cell).join(','));
   const csv = [header.join(','), ...rows].join('\n');
   res.setHeader('Content-Type','text/csv');
   res.setHeader('Content-Disposition','attachment; filename="contacts.csv"');
   res.send(csv);
 });
 
-router.get('/:id', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+router.get('/:id', requireAuth as any, requirePermission('contacts.view') as any, async (req:any,res:any)=>{
   const item = await db.getById('contacts' as any, req.params.id);
   if(!item) return res.status(404).json({ success:false, message:'Not found'});
   res.json({ success:true, data:item });
 });
 
-router.put('/:id', requireAuth as any, requireAdmin as any, async (req:any,res:any)=>{
+router.put('/:id', requireAuth as any, requirePermission('contacts.manage') as any, async (req:any,res:any)=>{
   const updated = await db.update('contacts' as any, req.params.id, { ...req.body, updatedAt: new Date().toISOString()});
   res.json({ success:true, data:updated });
 });

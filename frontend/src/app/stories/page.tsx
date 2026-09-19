@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Container, Section, Heading, Text, Card, Button, FadeIn, Stagger, StaggerItem, ScaleIn, LazyImage } from '@/components/ui';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, errorMessage } from '@/lib/api';
 import { BlogPost } from '@/types';
 
 const categories = [
@@ -14,19 +14,20 @@ const categories = [
   { id: 'research', name: 'Research & Reports' },
 ];
 
-const FALLBACK: BlogPost[] = [
-  { id: '1', slug: 'orphan-scholarship-80-supported', title: '80 Orphans Receiving Scholarships — Hope Restored', excerpt: 'Through the Love of Jesus, 80 children now have books, tutoring and school support.', content: '', featuredImage: '/images/stories/scholarship.jpg', author: { name: 'Lawer and Lawers Team', avatar: ''}, category: 'education', tags: ['orphan','education'], publishedAt: '2024-01-15', updatedAt:'2024-01-15', isFeatured:true, readTime:5},
-  { id: '2', slug: 'widows-micro-business-ghs60k', title: '20 Widows Start Businesses — GHS 60,000 Income', excerpt: 'Sewing, baking, hairdressing and digital skills turned into sustainable micro-businesses.', content:'', featuredImage:'/images/stories/women-business.jpg', author:{name:'Lawer and Lawers Team',avatar:''}, category:'community', tags:['widows'], publishedAt:'2024-01-10', updatedAt:'2024-01-10', isFeatured:true, readTime:4},
-];
-
 export default function StoriesPage() {
-  const [posts, setPosts] = useState<BlogPost[]>(FALLBACK);
+  const [posts, setPosts] = useState<BlogPost[]>([]);
   const [filter, setFilter] = useState('all');
-  useEffect(()=>{ api.getStories(filter).then(d=>{ if(d?.length) setPosts(d);}).catch(()=>{}); },[filter]);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    api.getStories(filter).then(data => { if (active) { setPosts(data); setError(''); } }).catch(e => { if (active) { setPosts([]); setError(errorMessage(e)); } });
+    return () => { active = false; };
+  }, [filter]);
   const featuredPosts = posts.filter(post => post.isFeatured);
   const regularPosts = posts.filter(post => !post.isFeatured);
   return (
     <>
+      {error && <p role="alert" className="p-4 text-center">{error}</p>}
       <Section background="primary">
         <Container>
           <FadeIn><Heading level={1} className="text-white">Stories & Blog</Heading></FadeIn>

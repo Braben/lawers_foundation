@@ -3,7 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.app = void 0;
 const express_1 = __importDefault(require("express"));
+const errors_1 = require("./middleware/errors");
+const upload_1 = require("./routes/upload");
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const firebase_1 = require("./config/firebase");
@@ -13,40 +16,49 @@ const stories_1 = __importDefault(require("./routes/stories"));
 const events_1 = __importDefault(require("./routes/events"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
 const content_1 = __importDefault(require("./routes/content"));
-const upload_1 = __importDefault(require("./routes/upload"));
+const upload_2 = __importDefault(require("./routes/upload"));
 const donations_1 = __importDefault(require("./routes/donations"));
 const contacts_1 = __importDefault(require("./routes/contacts"));
+const settings_1 = __importDefault(require("./routes/settings"));
+const staff_1 = __importDefault(require("./routes/staff"));
+const analytics_1 = __importDefault(require("./routes/analytics"));
 dotenv_1.default.config();
 (0, firebase_1.initFirebase)();
-const app = (0, express_1.default)();
+exports.app = (0, express_1.default)();
+exports.app.disable('x-powered-by');
 const PORT = process.env.PORT || 4000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-app.use((0, cors_1.default)({ origin: FRONTEND_URL, credentials: true }));
-app.use(express_1.default.json({ limit: '10mb' }));
-app.use(auth_1.authMiddleware);
-app.get('/health', (_req, res) => res.json({ success: true, message: 'Lawers Foundation API running', firebase: process.env.FIREBASE_PROJECT_ID ? 'configured' : 'mock-local-json' }));
-app.use('/api/programs', programs_1.default);
-app.use('/api/stories', stories_1.default);
-app.use('/api/events', events_1.default);
-app.use('/api/gallery', gallery_1.default);
-app.use('/api/content', content_1.default);
-app.use('/api/upload', upload_1.default);
-app.use('/api/donations', donations_1.default);
-app.use('/api/contacts', contacts_1.default);
+exports.app.use((0, cors_1.default)({ origin: FRONTEND_URL, credentials: true }));
+exports.app.use(express_1.default.json({ limit: '1mb' }));
+exports.app.use('/uploads', express_1.default.static(upload_1.UPLOAD_DIR, { dotfiles: 'deny', setHeaders: res => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); } }));
+exports.app.use(auth_1.authMiddleware);
+exports.app.get('/health', (_req, res) => res.json({ success: true, message: 'Lawers Foundation API running', database: process.env.NODE_ENV === 'test' ? 'test' : 'firestore' }));
+exports.app.use('/api/programs', programs_1.default);
+exports.app.use('/api/stories', stories_1.default);
+exports.app.use('/api/events', events_1.default);
+exports.app.use('/api/gallery', gallery_1.default);
+exports.app.use('/api/content', content_1.default);
+exports.app.use('/api/upload', upload_2.default);
+exports.app.use('/api/donations', donations_1.default);
+exports.app.use('/api/contacts', contacts_1.default);
+exports.app.use('/api/settings', settings_1.default);
+exports.app.use('/api/staff', staff_1.default);
+exports.app.use('/api/analytics', analytics_1.default);
 const admin_1 = __importDefault(require("./routes/admin"));
-const rbac_1 = require("./middleware/rbac");
-app.use('/api/admin', admin_1.default);
-app.get('/api/auth/role', (req, res) => {
-    const user = req.user;
-    if (!user)
-        return res.status(401).json({ success: false, message: 'Not authenticated' });
-    res.json({ success: true, data: { email: user.email, role: (0, rbac_1.getUserRole)(user.email) } });
+const access_1 = require("./services/access");
+const asyncRouter_1 = require("./middleware/asyncRouter");
+exports.app.use('/api/admin', admin_1.default);
+const authRoutes = (0, asyncRouter_1.asyncRouter)();
+authRoutes.get(['/role', '/me'], async (req, res) => {
+    if (!req.user) {
+        res.status(401).json({ success: false, message: 'Not authenticated' });
+        return;
+    }
+    const access = await (0, access_1.resolveAccess)(req.user);
+    res.json({ success: true, data: { ...req.user, ...access } });
 });
-app.use('/api/auth/me', (req, res) => {
-    if (!req.user)
-        return res.status(401).json({ success: false, message: 'Not authenticated' });
-    const role = (0, rbac_1.getUserRole)(req.user.email);
-    res.json({ success: true, data: { ...req.user, role } });
-});
-app.use((_req, res) => res.status(404).json({ success: false, message: 'Not found' }));
-app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+exports.app.use('/api/auth', authRoutes);
+exports.app.use((_req, res) => res.status(404).json({ success: false, message: 'Not found' }));
+exports.app.use(errors_1.errorHandler);
+if (require.main === module)
+    exports.app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

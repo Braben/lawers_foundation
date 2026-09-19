@@ -1,6 +1,4 @@
-// @ts-ignore
 import { initializeApp, getApps, getApp } from 'firebase/app';
-// @ts-ignore
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {

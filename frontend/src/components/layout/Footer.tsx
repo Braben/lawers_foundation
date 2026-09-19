@@ -60,7 +60,7 @@ export function Footer() {
             <address className="not-italic text-[#EDF4F2] text-sm space-y-2">
               <p>Lower Manya Krobo Municipality</p>
               <p>Eastern Region, Ghana</p>
-              <p>Phone: +233 XX XXX XXXX</p>
+              <p><Link href="/contact?subject=donation" className="underline">Contact admin for donation payment details</Link></p>
               <p>Email: info@lawerandlawers.org</p>
             </address>
           </div>

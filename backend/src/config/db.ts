@@ -1,160 +1,172 @@
 import fs from 'fs';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { getFirestore, isFirebaseReady } from './firebase';
-
-export type CollectionName = 'programs' | 'stories' | 'events' | 'gallery' | 'siteContent' | 'donations' | 'contacts' | 'rsvps';
-
-const DATA_DIR = path.join(__dirname, '../data');
+import { HttpError } from '../middleware/errors';
+export type CollectionName = 'programs' | 'stories' | 'events' | 'gallery' | 'siteContent' | 'donations' | 'contacts' | 'rsvps' | 'roles' | 'staff' | 'settings' | 'analyticsEvents';
+type Row = Record<string, any>;
+type DbShape = Record<CollectionName, Row[]>;
+// Both tsx and compiled builds use the same file. DATA_DIR can point at a persistent volume.
+export const DATA_DIR = process.env.DATA_DIR || path.resolve(__dirname, '../../src/data');
 const DATA_FILE = path.join(DATA_DIR, 'db.json');
-
-type DbShape = Record<CollectionName, any[]>;
-
-function ensureFile() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) {
-    try {
-      const seedPath = path.join(__dirname, 'seed.json');
-      const altSeed = path.join(__dirname, '../../src/config/seed.json');
-      const p = fs.existsSync(seedPath) ? seedPath : altSeed;
-      const seed = JSON.parse(fs.readFileSync(p, 'utf-8'));
-      if (!seed.donations) seed.donations = [];
-      if (!seed.contacts) seed.contacts = [];
-      if (!seed.rsvps) seed.rsvps = [];
-      fs.writeFileSync(DATA_FILE, JSON.stringify(seed, null, 2));
-    } catch {
-      fs.writeFileSync(DATA_FILE, JSON.stringify({ programs:[], stories:[], events:[], gallery:[], siteContent:[], donations:[], contacts:[], rsvps:[] }, null, 2));
+export function mergeLocalData(current: DbShape, legacy: Partial<DbShape>): DbShape {
+  const result = { ...current };
+  for (const name of Object.keys(current) as CollectionName[]) {
+    const rows = new Map(current[name].map(row => [row.id, row]));
+    for (const row of legacy[name] || []) {
+      const existing = rows.get(row.id);
+      if (!existing || (Date.parse(row.updatedAt || row.createdAt || '') || 0) > (Date.parse(existing.updatedAt || existing.createdAt || '') || 0)) rows.set(row.id, row);
     }
-  } else {
-    try {
-      const cur = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
-      let changed=false;
-      if (!cur.donations) { cur.donations=[]; changed=true; }
-      if (!cur.contacts) { cur.contacts=[]; changed=true; }
-      if (!cur.rsvps) { cur.rsvps=[]; changed=true; }
-      if (changed) fs.writeFileSync(DATA_FILE, JSON.stringify(cur, null, 2));
-    } catch {}
+    result[name] = [...rows.values()];
   }
+  return result;
 }
-
+function useFirestore() {
+  if (process.env.NODE_ENV === 'test' && process.env.DATA_BACKEND === 'local') return false;
+  if (!isFirebaseReady()) throw new HttpError(503, 'Firestore is not configured. Contact the administrator.');
+  return true;
+}
 function readLocal(): DbShape {
-  ensureFile();
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(DATA_FILE)) {
+    const seed = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../src/config/seed.json'), 'utf8'));
+    writeLocal({ ...seed, donations: [], contacts: [], rsvps: [], roles: [], staff: [], settings: [], analyticsEvents: [] });
+  }
+  let current: DbShape = { programs: [], stories: [], events: [], gallery: [], siteContent: [], donations: [], contacts: [], rsvps: [], roles: [], staff: [], settings: [], analyticsEvents: [], ...JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')) };
+  const marker = path.join(DATA_DIR, '.legacy-dist-imported');
+  const legacyPath = path.resolve(__dirname, '../../dist/data/db.json');
+  if (!process.env.DATA_DIR && !fs.existsSync(marker) && fs.existsSync(legacyPath)) {
+    current = mergeLocalData(current, JSON.parse(fs.readFileSync(legacyPath, 'utf8')));
+    writeLocal(current);
+    fs.writeFileSync(marker, new Date().toISOString());
+  }
+  return current;
 }
 function writeLocal(data: DbShape) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  const temp = `${DATA_FILE}.${randomUUID()}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(data, null, 2));
+  fs.renameSync(temp, DATA_FILE);
 }
-
-function isFirestoreNotFound(err:any){
-  return err?.code===5 || err?.code==='NOT_FOUND' || /NOT_FOUND|5 NOT_FOUND/i.test(String(err?.message||''));
+function validateRsvp(event: Row, duplicate: boolean, guests: number) {
+  if (event.isPast || (event.endDate || event.date) < new Date().toISOString().slice(0, 10)) throw new HttpError(409, 'Registration is closed for this event.');
+  if (!event.registrationRequired) throw new HttpError(409, 'Registration is not open for this event.');
+  if (duplicate) throw new HttpError(409, 'Already registered with this email.');
+  const remaining = Number(event.capacity || 100) - Number(event.registeredCount || 0);
+  if (guests > remaining) throw new HttpError(409, `Only ${Math.max(0, remaining)} places remain.`);
 }
-
 export const db = {
-  async getAll(name: CollectionName) {
-    if (isFirebaseReady()) {
-      try{
-        const snap = await getFirestore()!.collection(name).get();
-        const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (data.length===0){
-          const local = readLocal()[name] || [];
-          if (local.length) return local;
-        }
-        return data;
-      }catch(e:any){
-        if(isFirestoreNotFound(e)){
-          console.warn(`[db] Firestore NOT_FOUND for ${name} — falling back to local JSON. Create Firestore database in Firebase console or check FIREBASE_PROJECT_ID.`);
-          return readLocal()[name] || [];
-        }
-        throw e;
-      }
+  async createMany(name: CollectionName, records: Row[]): Promise<Row[]> {
+    const payloads = records.map(data => ({ ...data, id: data.id || randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
+    if (useFirestore()) {
+      const batch = getFirestore()!.batch();
+      payloads.forEach(row => batch.create(getFirestore()!.collection(name).doc(row.id), row));
+      await batch.commit();
+    } else {
+      const local = readLocal();
+      if (payloads.some(row => local[name].some(existing => existing.id === row.id))) throw new HttpError(409, 'Record already exists.');
+      local[name].push(...payloads); writeLocal(local);
     }
-    return readLocal()[name] || [];
+    return payloads;
   },
-  async getById(name: CollectionName, id: string) {
-    if (isFirebaseReady()) {
-      try{
-        const doc = await getFirestore()!.collection(name).doc(id).get();
-        if (doc.exists) return { id: doc.id, ...doc.data() };
-        const fallback = (readLocal()[name] || []).find((x: any) => x.id === id || x.slug === id) || null;
-        return fallback;
-      }catch(e:any){
-        if(isFirestoreNotFound(e)) return (readLocal()[name] || []).find((x: any) => x.id === id || x.slug === id) || null;
-        throw e;
-      }
+  async range(name: CollectionName, field: string, from: string, to: string, limit = 50000) {
+    if (useFirestore()) {
+      const snap = await getFirestore()!.collection(name).where(field, '>=', from).where(field, '<=', to).orderBy(field).limit(limit).get();
+      return snap.docs.map(d => ({ ...d.data(), id: d.id })) as Row[];
     }
-    const local = readLocal()[name] || [];
-    return local.find((x: any) => x.id === id || x.slug === id) || null;
+    return readLocal()[name].filter(row => row[field] >= from && row[field] <= to).sort((a,b) => String(a[field]).localeCompare(String(b[field]))).slice(0, limit);
   },
-  async getBySlug(name: CollectionName, slug: string) {
-    if (isFirebaseReady()) {
-      try{
-        const snap = await getFirestore()!.collection(name).where('slug', '==', slug).limit(1).get();
-        if (snap.empty) {
-          const fallback = (readLocal()[name] || []).find((x: any) => x.slug === slug) || null;
-          return fallback;
-        }
-        const d = snap.docs[0];
-        return { id: d.id, ...d.data() };
-      }catch(e:any){
-        if(isFirestoreNotFound(e)) return (readLocal()[name] || []).find((x: any) => x.slug === slug) || null;
-        throw e;
-      }
+  async getAll(name: CollectionName): Promise<Row[]> {
+    if (useFirestore()) {
+      const snap = await getFirestore()!.collection(name).get();
+      return snap.docs.map(d => ({ ...d.data(), id: d.id }));
     }
-    const local = readLocal()[name] || [];
-    return local.find((x: any) => x.slug === slug) || null;
+    return readLocal()[name];
   },
-  async create(name: CollectionName, data: any) {
-    const id = data.id || `${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+  async getById(name: CollectionName, id: string): Promise<Row | null> {
+    if (useFirestore()) {
+      const doc = await getFirestore()!.collection(name).doc(id).get();
+      return doc.exists ? { ...doc.data(), id: doc.id } : null;
+    }
+    return readLocal()[name].find(x => x.id === id) || null;
+  },
+  async getBySlug(name: CollectionName, slug: string): Promise<Row | null> {
+    if (useFirestore()) {
+      const snap = await getFirestore()!.collection(name).where('slug', '==', slug).limit(1).get();
+      const doc = snap.docs[0];
+      return doc ? { ...doc.data(), id: doc.id } : null;
+    }
+    return readLocal()[name].find(x => x.slug === slug) || null;
+  },
+  async create(name: CollectionName, data: Row) {
+    const id = data.id || randomUUID();
     const payload = { ...data, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    if (isFirebaseReady()) {
-      try{
-        await getFirestore()!.collection(name).doc(id).set(payload);
-        return payload;
-      }catch(e:any){
-        if(isFirestoreNotFound(e)){
-          console.warn(`[db] Firestore NOT_FOUND on create ${name} — using local JSON`);
-        } else throw e;
-      }
+    if (useFirestore()) await getFirestore()!.collection(name).doc(id).create(payload);
+    else {
+      const local = readLocal();
+      if (local[name].some(x => x.id === id)) throw new HttpError(409, 'Record already exists.');
+      local[name].push(payload); writeLocal(local);
     }
-    const local = readLocal();
-    local[name] = [...(local[name] || []), payload];
-    writeLocal(local);
     return payload;
   },
-  async update(name: CollectionName, id: string, data: any) {
-    if (isFirebaseReady()) {
-      try{
-        await getFirestore()!.collection(name).doc(id).set({ ...data, updatedAt: new Date().toISOString() }, { merge: true });
-        const doc = await getFirestore()!.collection(name).doc(id).get();
-        return { id: doc.id, ...doc.data() };
-      }catch(e:any){
-        if(isFirestoreNotFound(e)){
-          console.warn(`[db] Firestore NOT_FOUND on update ${name} — using local JSON`);
-        } else throw e;
-      }
+  async update(name: CollectionName, id: string, data: Row) {
+    const { id: ignoredId, createdAt: ignoredCreatedAt, ...fields } = data;
+    const payload: Row = { ...fields, updatedAt: new Date().toISOString() };
+    if (name === 'events') delete payload.registeredCount;
+    const checkCapacity = (current: Row) => {
+      if (name === 'events' && payload.capacity !== undefined && Number(payload.capacity) < Number(current.registeredCount || 0)) throw new HttpError(409, 'Capacity cannot be less than the number already registered.');
+    };
+    if (useFirestore()) {
+      const ref = getFirestore()!.collection(name).doc(id);
+      await getFirestore()!.runTransaction(async transaction => {
+        const current = await transaction.get(ref);
+        if (!current.exists) throw new HttpError(404, 'Not found');
+        checkCapacity(current.data()!);
+        transaction.update(ref, payload);
+      });
+      return this.getById(name, id);
     }
     const local = readLocal();
-    local[name] = (local[name] || []).map((x: any) => x.id === id ? { ...x, ...data, updatedAt: new Date().toISOString() } : x);
-    writeLocal(local);
-    return local[name].find((x: any) => x.id === id);
+    const index = local[name].findIndex(x => x.id === id);
+    if (index < 0) throw new HttpError(404, 'Not found');
+    checkCapacity(local[name][index]);
+    local[name][index] = { ...local[name][index], ...payload }; writeLocal(local);
+    return local[name][index];
   },
   async remove(name: CollectionName, id: string) {
-    if (isFirebaseReady()) {
-      try{
-        await getFirestore()!.collection(name).doc(id).delete();
-        return true;
-      }catch(e:any){
-        if(isFirestoreNotFound(e)){
-          console.warn(`[db] Firestore NOT_FOUND on delete ${name} — using local JSON`);
-        } else throw e;
-      }
-    }
-    const local = readLocal();
-    local[name] = (local[name] || []).filter((x: any) => x.id !== id);
-    writeLocal(local);
+    if (useFirestore()) await getFirestore()!.collection(name).doc(id).delete();
+    else { const local = readLocal(); local[name] = local[name].filter(x => x.id !== id); writeLocal(local); }
     return true;
   },
-  async query(name: CollectionName, filters: Record<string, any> = {}) {
-    const all = await this.getAll(name) as any[];
-    return all.filter(item => Object.entries(filters).every(([k,v]) => v === undefined || v === '' || String(item[k]) === String(v)));
-  }
+  async query(name: CollectionName, filters: Record<string, unknown> = {}) {
+    return (await this.getAll(name)).filter(item => Object.entries(filters).every(([k, v]) => v === undefined || v === '' || String(item[k]) === String(v)));
+  },
+  async registerRsvp(eventId: string, data: { name: string; email: string; phone?: string; guests: number }) {
+    const email = data.email.trim().toLowerCase();
+    const id = Buffer.from(`${eventId}:${email}`).toString('base64url');
+    const makePayload = (event: Row) => ({ ...data, email, id, eventId, eventTitle: event.title, createdAt: new Date().toISOString() });
+    if (useFirestore()) {
+      const firestore = getFirestore()!;
+      const eventRef = firestore.collection('events').doc(eventId);
+      const rsvpRef = firestore.collection('rsvps').doc(id);
+      return firestore.runTransaction(async transaction => {
+        const eventDoc = await transaction.get(eventRef);
+        if (!eventDoc.exists) throw new HttpError(404, 'Event not found');
+        const event = eventDoc.data()!;
+        const existing = await transaction.get(firestore.collection('rsvps').where('eventId', '==', eventId));
+        validateRsvp(event, existing.docs.some(d => String(d.data().email).toLowerCase() === email), data.guests);
+        const payload = makePayload(event);
+        transaction.create(rsvpRef, payload);
+        transaction.update(eventRef, { registeredCount: Number(event.registeredCount || 0) + data.guests });
+        return payload;
+      });
+    }
+    // No await between read and write: capacity and registration commit together.
+    const local = readLocal();
+    const event = local.events.find(e => e.id === eventId);
+    if (!event) throw new HttpError(404, 'Event not found');
+    validateRsvp(event, local.rsvps.some(r => r.eventId === eventId && String(r.email).toLowerCase() === email), data.guests);
+    const payload = makePayload(event);
+    local.rsvps.push(payload); event.registeredCount = Number(event.registeredCount || 0) + data.guests;
+    writeLocal(local); return payload;
+  },
 };

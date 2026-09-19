@@ -1,4 +1,5 @@
 'use client';
+import { errorMessage } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Container, Section, Heading, Text, Button } from '@/components/ui';
@@ -21,7 +22,7 @@ export default function AdminLogin() {
     try {
       await signInWithEmail(email,password);
       router.replace('/admin');
-    } catch(er:any){ setErr(er.message || 'Invalid credentials'); }
+    } catch(er: unknown){ setErr(errorMessage(er) || 'Invalid credentials'); }
     finally{ setBusy(false); }
   };
   return (

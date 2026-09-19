@@ -7,12 +7,9 @@ import {
   Text,
   Card,
   CardTitle,
-  CardContent,
+  ScaleIn,
   Button,
   FadeIn,
-  Stagger,
-  StaggerItem,
-  ScaleIn,
   CountUp,
 } from "@/components/ui";
 import Link from "next/link";
@@ -132,13 +129,13 @@ const FALLBACK = [
 ];
 
 export default function ProgramsPage() {
-  const [programs, setPrograms] = useState<any[]>(FALLBACK);
+  const [programs, setPrograms] = useState(FALLBACK);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     api
       .getPrograms()
       .then((d) => {
-        if (d?.length) setPrograms(d);
+        setPrograms(d);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -164,6 +161,7 @@ export default function ProgramsPage() {
       </Section>
       <Section>
         <Container>
+          {loading && <Text>Loading programs...</Text>}
           <div className="text-center mb-12">
             <FadeIn>
               <Heading level={2}>Our Impact at a Glance</Heading>
@@ -251,7 +249,7 @@ export default function ProgramsPage() {
                       Our Impact
                     </CardTitle>
                     <div className="grid grid-cols-2 gap-4 mt-4">
-                      {program.impactStats.map((stat: any, sIndex: number) => (
+                      {program.impactStats.map((stat, sIndex) => (
                         <FadeIn key={stat.label} delay={0.1 * sIndex}>
                           <div className="text-center p-4 bg-white rounded-lg">
                             <div className="text-2xl md:text-3xl font-bold text-[#2C5F2D]">

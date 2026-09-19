@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
+const asyncRouter_1 = require("../middleware/asyncRouter");
 const db_1 = require("../config/db");
 const auth_1 = require("../middleware/auth");
+const rbac_1 = require("../middleware/rbac");
 const zod_1 = require("zod");
-const router = (0, express_1.Router)();
+const router = (0, asyncRouter_1.asyncRouter)();
 function autoTags(subject, message, email) {
     const s = `${subject} ${message} ${email}`.toLowerCase();
     const tags = [];
@@ -39,7 +40,7 @@ router.post('/', async (req, res) => {
     const created = await db_1.db.create('contacts', payload);
     res.status(201).json({ success: true, data: created, message: 'Message received. We will respond within 24-48 hours.' });
 });
-router.get('/', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+router.get('/', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.view'), async (req, res) => {
     const { tag } = req.query;
     let data = await db_1.db.getAll('contacts');
     if (tag && tag !== 'all')
@@ -47,25 +48,30 @@ router.get('/', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
     data = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     res.json({ success: true, data });
 });
-router.get('/export/csv', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+router.get('/export/csv', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.view'), async (req, res) => {
     const { tag } = req.query;
     let data = await db_1.db.getAll('contacts');
     if (tag && tag !== 'all')
         data = data.filter(d => (d.tags || []).includes(tag));
     const header = ['Name', 'Email', 'Phone', 'Subject', 'Message', 'Tags', 'CreatedAt'];
-    const rows = data.map(d => [d.name, d.email, d.phone || '', d.subject, `"${String(d.message).replace(/"/g, '""')}"`, (d.tags || []).join('|'), d.createdAt].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const cell = (value) => {
+        const text = String(value ?? '');
+        const safe = /^[=+@\-\t\r\n]/.test(text) ? "'" + text : text;
+        return '"' + safe.replace(/"/g, '""') + '"';
+    };
+    const rows = data.map(d => [d.name, d.email, d.phone, d.subject, d.message, (d.tags || []).join('|'), d.createdAt].map(cell).join(','));
     const csv = [header.join(','), ...rows].join('\n');
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="contacts.csv"');
     res.send(csv);
 });
-router.get('/:id', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+router.get('/:id', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.view'), async (req, res) => {
     const item = await db_1.db.getById('contacts', req.params.id);
     if (!item)
         return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, data: item });
 });
-router.put('/:id', auth_1.requireAuth, auth_1.requireAdmin, async (req, res) => {
+router.put('/:id', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.manage'), async (req, res) => {
     const updated = await db_1.db.update('contacts', req.params.id, { ...req.body, updatedAt: new Date().toISOString() });
     res.json({ success: true, data: updated });
 });

@@ -1,8 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { auth } from '@/lib/firebase';
-// @ts-ignore
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
+import { onIdTokenChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
 
 type AuthContextType = {
   user: User | null;
@@ -20,16 +19,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        const t = await u.getIdToken();
-        setToken(t);
-        localStorage.setItem('lf_token', t);
-      } else {
-        setToken(null);
-        localStorage.removeItem('lf_token');
-      }
+    return onIdTokenChanged(auth, async (u) => {
+      localStorage.removeItem('lf_token');
+      try {
+        const t = u ? await u.getIdToken() : null;
+        setUser(u); setToken(t);
+      } catch { setUser(null); setToken(null); }
       setLoading(false);
     });
   }, []);

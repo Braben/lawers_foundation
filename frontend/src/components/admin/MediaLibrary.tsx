@@ -1,7 +1,10 @@
 "use client";
+import { errorMessage } from '@/lib/api';
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
+import { usePermission } from '@/components/admin/AdminLayout';
+import type { GalleryItem } from "@/types";
+import { LazyImage } from "@/components/ui";
 
 export function MediaLibrary({
   onSelect,
@@ -10,8 +13,8 @@ export function MediaLibrary({
   onSelect: (url: string) => void;
   selected?: string;
 }) {
-  const { token } = useAuth();
-  const [items, setItems] = useState<any[]>([]);
+  const canUpload=usePermission('gallery.manage');
+  const [items, setItems] = useState<GalleryItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const load = () =>
     api
@@ -23,14 +26,14 @@ export function MediaLibrary({
   }, []);
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (!f || !token) return;
+    if (!f) return;
     setUploading(true);
     try {
-      const url = await api.uploadThumbnail(f, token);
-      onSelect(url);
+      const item = await api.uploadImage(f, { title: f.name.replace(/\.[^.]+$/, ""), description: "", category: "community" });
+      onSelect(item.url);
       load();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert(errorMessage(err));
     } finally {
       setUploading(false);
     }
@@ -43,10 +46,10 @@ export function MediaLibrary({
           {uploading ? "Uploading..." : "Upload Thumbnail"}
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={onUpload}
-            disabled={uploading}
+            disabled={uploading || !canUpload}
           />
         </label>
       </div>
@@ -57,11 +60,10 @@ export function MediaLibrary({
             onClick={() => onSelect(it.thumbnail || it.url)}
             className={`aspect-square rounded-lg overflow-hidden border-2 ${selected === (it.thumbnail || it.url) ? "border-[#2C5F2D]" : "border-transparent"} bg-[#EDF4F2]`}
           >
-            <img
+            <LazyImage
               src={it.thumbnail || it.url}
               alt={it.title}
               className="w-full h-full object-cover"
-              onError={(e) => (e.currentTarget.style.display = "none")}
             />
           </button>
         ))}
@@ -72,7 +74,7 @@ export function MediaLibrary({
         )}
       </div>
       <div className="text-xs text-gray-400 mt-2">
-        Videos are link-only. Upload only thumbnails here (Firebase Storage).
+        JPEG, PNG or WebP, up to 5 MB. Uploaded images appear in the gallery.
       </div>
     </div>
   );

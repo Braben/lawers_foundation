@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "seed": "tsx src/utils/seed.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "seed": "tsx src/utils/seed.ts",
+    "setup:firestore": "tsx src/utils/initialize-firestore.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

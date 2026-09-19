@@ -1,10 +1,13 @@
 'use client';
+import { errorMessage } from '@/lib/api';
 import { useState, FormEvent } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Container, Section, Heading, Text, Button } from '@/components/ui';
 import { api } from '@/lib/api';
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name:'', email:'', phone:'', subject:'', message:'' });
+  const searchParams = useSearchParams();
+  const [formData, setFormData] = useState({ name:'', email:'', phone:'', subject: searchParams.get('subject') === 'donation' ? 'donation' : '', message:'' });
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -15,13 +18,13 @@ export default function ContactPage() {
     try{
       await api.createContact(formData);
       setSubmitted(true);
-    }catch(er:any){ setErr(er.message || 'Failed to send message'); }
+    }catch(er: unknown){ setErr(errorMessage(er) || 'Failed to send message'); }
     finally{ setBusy(false); }
   };
 
   const contactInfo = [
     { label: 'Address', value: 'Lower Manya Krobo Municipality, Eastern Region, Ghana' },
-    { label: 'Phone', value: '+233 XX XXX XXXX' },
+
     { label: 'Email', value: 'info@lawerandlawers.org' },
     { label: 'Hours', value: 'Monday - Friday: 9:00 AM - 5:00 PM (GMT)' },
   ];
@@ -51,9 +54,9 @@ export default function ContactPage() {
               </div>
               <div className="mt-8">
                 <Text className="font-semibold text-[#2C5F2D]">Support & Sponsorship</Text>
-                <Text>For urgent support on education, health care or house-help services: +233 XX XXX XXXX</Text>
+                <Text>For donation payment details, select Donation Inquiry in the form and send your request to the administrator.</Text>
               </div>
-              <Text className="text-xs text-gray-500 mt-6">Backend: POST {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/contacts — stored in database, admin views via GET /api/contacts (auth required)</Text>
+
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-8">
@@ -65,7 +68,7 @@ export default function ContactPage() {
                     </svg>
                   </div>
                   <Heading level={3}>Thank You!</Heading>
-                  <Text className="mt-4">Your message has been received via POST /api/contacts and stored in the backend database. We will get back to you within 24-48 hours.</Text>
+                  <Text className="mt-4">Your message has been received. Our administrator will contact you using the details you provided.</Text>
                   <Button className="mt-6" onClick={()=>{setSubmitted(false); setFormData({name:'',email:'',phone:'',subject:'',message:''});}}>Send Another Message</Button>
                 </div>
               ) : (
