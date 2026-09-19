@@ -1,6 +1,6 @@
 import type { ApiResponse, Program, BlogPost, Event, GalleryItem, Donation, Contact, Rsvp, AdminStats, AccessProfile, CurrencySettings, VisitAnalytics, RoleDefinition, StaffAccount } from '@/types';
 import { auth } from './firebase';
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_BASE as BASE } from './api-base';
 export function errorMessage(error: unknown) { return error instanceof Error ? error.message : 'The request could not be completed. Please try again.'; }
 export async function apiFetch(path: string, opts: RequestInit = {}) {
   const headers = new Headers(opts.headers);

@@ -20,10 +20,10 @@ import analytics from './routes/analytics';
 dotenv.config();
 initFirebase();
 
-export const app = express();
+const app = express();
 app.disable('x-powered-by');
 const PORT = process.env.PORT || 4000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, '');
 
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
@@ -58,4 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use((_req,res)=>res.status(404).json({ success:false, message:'Not found'}));
 
 app.use(errorHandler);
+// Vercel must receive the handler itself from this CommonJS module.
+// A transpiled `export default` wraps it in an exports object instead.
+export = app;
 if (require.main === module) app.listen(PORT, ()=>console.log(`Backend running on http://localhost:${PORT}`));

@@ -9,7 +9,7 @@ const pageViewSchema = z.object({ eventId:z.string().uuid(), visitorId:z.string(
 const requests = new Map<string,{ start:number; count:number }>();
 router.post('/pageview', async (req,res) => {
   if (req.get('DNT')==='1' || req.get('Sec-GPC')==='1') { res.status(202).json({ success:true, data:null }); return; }
-  if (req.get('origin') && req.get('origin') !== (process.env.FRONTEND_URL || 'http://localhost:3000')) throw new HttpError(403,'Origin not allowed');
+  if (req.get('origin') && req.get('origin') !== ((process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, ''))) throw new HttpError(403,'Origin not allowed');
   const parsed = pageViewSchema.safeParse(req.body);
   if (!parsed.success) throw new HttpError(400,'Invalid visit');
   const path = parsed.data.path;

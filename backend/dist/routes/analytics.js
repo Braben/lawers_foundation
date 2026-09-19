@@ -15,7 +15,7 @@ router.post('/pageview', async (req, res) => {
         res.status(202).json({ success: true, data: null });
         return;
     }
-    if (req.get('origin') && req.get('origin') !== (process.env.FRONTEND_URL || 'http://localhost:3000'))
+    if (req.get('origin') && req.get('origin') !== ((process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, '')))
         throw new errors_1.HttpError(403, 'Origin not allowed');
     const parsed = pageViewSchema.safeParse(req.body);
     if (!parsed.success)

@@ -23,7 +23,8 @@ const start = (app: express.Express) => new Promise<{ server: Server; base: stri
 });
 const request = (url: string, body: object) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 before(async () => {
-  const { app } = await import('../src/index');
+  const app = require('../src/index') as typeof import('../src/index');
+  assert.equal(typeof app, 'function', 'Vercel entrypoint must export a callable handler');
   ({ server, base } = await start(app));
   ({ db } = await import('../src/config/db'));
   // Test-only authenticated harness: production auth is exercised on the real app above.
