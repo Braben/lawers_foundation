@@ -1,3 +1,4 @@
+import { contentSchemas } from '../services/content-schema';
 import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
 import { requireAuth } from '../middleware/auth';
@@ -14,12 +15,16 @@ router.get('/', async (req:any,res:any)=>{
   res.json({ success:true, data});
 });
 router.put('/:id', requireAuth as any, requirePermission('content.manage') as any, async (req:any,res:any)=>{
-  const existing = await db.getById('siteContent', req.params.id);
+  const key = String(req.params.id);
+  const schema = Object.prototype.hasOwnProperty.call(contentSchemas,key) ? contentSchemas[key as keyof typeof contentSchemas] : undefined;
+  const parsed = schema?.safeParse(req.body);
+  if (!parsed?.success || !Object.keys(parsed.data).length) return res.status(400).json({success:false,message:'Unknown page or invalid content fields.'});
+  const existing = await db.getById('siteContent', key);
   if (!existing) {
-    const created = await db.create('siteContent', { id: req.params.id, ...req.body });
+    const created = await db.create('siteContent', { ...parsed.data, id: key });
     return res.json({ success:true, data:created});
   }
-  const updated = await db.update('siteContent', req.params.id, req.body);
+  const updated = await db.update('siteContent', key, parsed.data);
   res.json({ success:true, data:updated});
 });
 export default router;

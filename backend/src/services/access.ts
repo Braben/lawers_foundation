@@ -16,10 +16,10 @@ export async function listRoles() {
   return [...DEFAULT_ROLES.map(role => role.protected ? role : stored.find(r => r.id === role.id) || role), ...stored.filter(role => !DEFAULT_ROLES.some(r => r.id === role.id))];
 }
 export async function resolveAccess(user: AuthUser) {
-  if (bootstrapRole(user.email) === 'super_admin') return { role: 'super_admin', permissions: [...PERMISSIONS], protected: true };
   const staff = await db.getById('staff', user.uid);
   if (staff?.disabled) throw new HttpError(403, 'This staff account is disabled.');
-  const roleId = staff?.roleId || bootstrapRole(user.email);
+  const roleId = staff?.roleId || 'viewer';
+  if (roleId === 'super_admin') return { role: 'super_admin', permissions: [...PERMISSIONS], protected: true };
   const role = (await listRoles()).find(r => r.id === roleId);
   return { role: roleId, permissions: (role?.permissions || []).filter((p: string) => PERMISSIONS.includes(p)), protected: false };
 }

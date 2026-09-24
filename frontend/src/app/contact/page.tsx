@@ -1,4 +1,5 @@
 'use client';
+import { FormVerification } from '@/components/FormVerification';
 import { errorMessage } from '@/lib/api';
 import { useState, FormEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -9,17 +10,19 @@ export default function ContactPage() {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({ name:'', email:'', phone:'', subject: searchParams.get('subject') === 'donation' ? 'donation' : '', message:'' });
   const [submitted, setSubmitted] = useState(false);
+  const [verificationToken, setVerificationToken] = useState('');
+  const [verificationReset, setVerificationReset] = useState(0);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErr(''); setBusy(true);
     try{
-      await api.createContact(formData);
+      await api.createContact({...formData, verificationToken, website: new FormData(e.currentTarget).get('website')});
       setSubmitted(true);
     }catch(er: unknown){ setErr(errorMessage(er) || 'Failed to send message'); }
-    finally{ setBusy(false); }
+    finally{ setBusy(false); setVerificationToken(''); setVerificationReset(v=>v+1); }
   };
 
   const contactInfo = [
@@ -104,7 +107,8 @@ export default function ContactPage() {
                     <textarea id="message" rows={4} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C5F2D] focus:border-transparent" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} />
                   </div>
                   {err && <Text className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{err}</Text>}
-                  <Button type="submit" disabled={busy} className="w-full">{busy ? 'Sending...' : 'Send Message'}</Button>
+                  <FormVerification action="contact" onToken={setVerificationToken} resetKey={verificationReset} />
+<Button type="submit" disabled={busy || !verificationToken} className="w-full">{busy ? 'Sending...' : 'Send Message'}</Button>
                 </form>
               )}
             </div>

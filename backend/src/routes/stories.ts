@@ -1,3 +1,4 @@
+import { cleanHtml } from '../services/html';
 import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
 import { requireAuth } from '../middleware/auth';
@@ -8,7 +9,7 @@ const schema = z.object({
   slug: z.string().min(2),
   title: z.string().min(2),
   excerpt: z.string().min(10),
-  content: z.string().default(''),
+  content: z.string().max(100000).default('').transform(cleanHtml),
   featuredImage: z.string().default(''),
   author: z.object({ name: z.string(), avatar: z.string().optional() }).default({ name: 'Admin', avatar: ''}),
   category: z.string().default('news'),

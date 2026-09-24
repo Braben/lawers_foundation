@@ -1,4 +1,5 @@
 'use client';
+import { FormVerification } from '@/components/FormVerification';
 import { errorMessage } from '@/lib/api';
 import { useEffect, useState } from 'react';
 import { Container, Section, Heading, Text, Card, CardTitle, CardContent, Button } from '@/components/ui';
@@ -32,19 +33,21 @@ export default function GetInvolvedPage() {
   const [currencies,setCurrencies]=useState<CurrencySettings|null>(null);
   const [currency,setCurrency]=useState('');
   useEffect(()=>{api.getCurrencies().then(settings=>{setCurrencies(settings);setCurrency(settings.defaultCurrency);}).catch(e=>setDonateErr(errorMessage(e)));},[]);
+  const [verificationToken, setVerificationToken] = useState('');
+  const [verificationReset, setVerificationReset] = useState(0);
   const [donating, setDonating] = useState(false);
   const [donateMsg, setDonateMsg] = useState('');
   const [donateErr, setDonateErr] = useState('');
 
-  const handleDonate = async (e: React.FormEvent) => {
+  const handleDonate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setDonateMsg(''); setDonateErr(''); setDonating(true);
     try{
-      await api.createDonation({ name: donation.name, email: donation.email, phone: donation.phone, amount: Number(donation.amount), currency, program: donation.program, frequency: donation.frequency, message: donation.message });
+      await api.createDonation({ name: donation.name, email: donation.email, phone: donation.phone, amount: Number(donation.amount), currency, program: donation.program, frequency: donation.frequency, message: donation.message, verificationToken, website: new FormData(e.currentTarget).get('website') });
       setDonateMsg('Thank you! Your pledge was received. Please contact the administrator using the link below for payment details. No payment has been collected.');
       setDonation({ name:'', email:'', phone:'', amount:'', program:'orphan-support', frequency:'once', message:'' });
     }catch(er: unknown){ setDonateErr(errorMessage(er) || 'Failed to submit donation'); }
-    finally{ setDonating(false); }
+    finally{ setDonating(false); setVerificationToken(''); setVerificationReset(v=>v+1); }
   };
 
   return (
@@ -137,7 +140,8 @@ export default function GetInvolvedPage() {
               <label className="block text-sm font-medium mb-1">Message (optional)</label>
               <textarea rows={3} value={donation.message} onChange={e=>setDonation({...donation, message:e.target.value})} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#2C5F2D]" />
             </div>
-            <Button type="submit" disabled={donating || !currencies || !currency} className="w-full">{donating ? 'Submitting...' : 'Submit Pledge'}</Button>
+            <FormVerification action="pledge" onToken={setVerificationToken} resetKey={verificationReset} />
+<Button type="submit" disabled={donating || !currencies || !currency || !verificationToken} className="w-full">{donating ? 'Submitting...' : 'Submit Pledge'}</Button>
             {donateMsg && <Text className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">{donateMsg}</Text>}
             {donateErr && <Text className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{donateErr}</Text>}
             <Text className="text-xs text-gray-500 text-center"><Link href="/contact?subject=donation" className="underline">Contact the administrator for payment details</Link>. We do not collect payments on this website.</Text>

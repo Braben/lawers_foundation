@@ -27,11 +27,14 @@ before(async () => {
   assert.equal(typeof app, 'function', 'Vercel entrypoint must export a callable handler');
   ({ server, base } = await start(app));
   ({ db } = await import('../src/config/db'));
+  for (const [uid,email,roleId] of [['admin','admin@example.com','super_admin'],['publisher','publisher@example.com','publisher'],['events','events@example.com','event_manager']]) await db.create('staff',{id:uid,email,roleId,disabled:false});
   // Test-only authenticated harness: production auth is exercised on the real app above.
   const staff = express(); staff.use(express.json());
-  staff.use((req, _res, next) => { (req as express.Request & { user: object }).user = { uid: req.headers['x-test-uid'] || 'test', email: req.headers['x-test-email'] || 'publisher@example.com' }; next(); });
+  staff.use((req, _res, next) => { (req as express.Request & { user: object }).user = { uid: req.headers['x-test-uid'] || ({'admin@example.com':'admin','events@example.com':'events'}[String(req.headers['x-test-email'])] || 'publisher'), email: req.headers['x-test-email'] || 'publisher@example.com' }; next(); });
   staff.use('/upload', (await import('../src/routes/upload')).default);
   staff.use('/gallery', (await import('../src/routes/gallery')).default);
+  staff.use('/contacts',(await import('../src/routes/contacts')).default);
+  staff.use('/content',(await import('../src/routes/content')).default);
   staff.use('/stories', (await import('../src/routes/stories')).default);
   staff.use('/events', (await import('../src/routes/events')).default);
   staff.use('/settings',(await import('../src/routes/settings')).default);
@@ -48,8 +51,8 @@ after(async () => {
   assert.equal(path.dirname(target), path.resolve(os.tmpdir()));
   assert.ok(path.basename(target).startsWith('lawers-test-'));
   fs.rmSync(target, { recursive: true });
-  const admin = await import('firebase-admin');
-  await Promise.all(admin.apps.map(app=>app?.delete()));
+  const {getApps,deleteApp} = await import('firebase-admin/app');
+  await Promise.all(getApps().map(app=>deleteApp(app)));
 });
 
 test('production API rejects anonymous stats and forged tokens without Firebase', async () => {
@@ -110,7 +113,13 @@ test('publishers can create stories; event managers can create events but not st
 test('RSVPs enforce capacity atomically, normalize emails, and close past events', async () => {
   const event = await db.create('events', { slug: 'capacity-event', title: 'Capacity test', date: '2099-01-01', registrationRequired: true, capacity: 2, registeredCount: 0 });
   const responses = await Promise.all(['one', 'two', 'three'].map(name => request(`${base}/api/events/${event.id}/rsvp`, { name: `${name} guest`, email: `${name}@example.com`, guests: 1 })));
-  assert.deepEqual(responses.map(r => r.status).sort(), [201, 201, 409]);
+  assert.deepEqual(responses.map(r => r.status).sort(), [201, 201, 201]);
+  assert.equal((await db.getById('events', event.id))!.registeredCount, 0);
+  const pending = (await db.getAll('rsvps')).filter(r=>r.eventId===event.id);
+  const approvals = await Promise.allSettled(pending.map(r=>db.reviewRsvp(event.id,r.id,'approved','admin')));
+  assert.equal(approvals.filter(r=>r.status==='fulfilled').length,2);
+  assert.equal(approvals.filter(r=>r.status==='rejected').length,1);
+  await assert.rejects(db.reviewRsvp(event.id,pending[0].id,'approved','admin'),{status:409});
   assert.equal((await db.getById('events', event.id))!.registeredCount, 2);
   await db.update('events', event.id, { registeredCount: 0 });
   assert.equal((await db.getById('events', event.id))!.registeredCount, 2);
@@ -206,8 +215,9 @@ test('custom permissions are immediately enforced and protected roles cannot be 
   assert.equal((await fetch(`${staffBase}/staff/roles/ceo`,{method:'PUT',headers:{...headers,'x-test-uid':'ceo-test','x-test-email':'ceo@example.com'},body:JSON.stringify({name:'CEO',permissions:[]})})).status,409);
 });
 test('staff creation uses Firebase Auth, stores no password, and cleans up if Firestore fails',async()=>{
-  const admin=await import('firebase-admin');admin.initializeApp({projectId:'lawers-test'});
-  const auth=admin.auth();let removed='';
+  const {initializeApp}=await import('firebase-admin/app');initializeApp({projectId:'lawers-test'});
+  const {getAuth}=await import('firebase-admin/auth');
+  const auth=getAuth();let removed='';
   mock.method(auth,'createUser',async(data:any)=>({uid:'created-staff',email:data.email}));
   mock.method(auth,'deleteUser',async(uid:string)=>{removed=uid;});
   mock.method(auth,'updateUser',async(uid:string)=>({uid}));
@@ -218,4 +228,37 @@ test('staff creation uses Firebase Auth, stores no password, and cleans up if Fi
   assert.equal((await fetch(`${staffBase}/staff/accounts/created-staff`,{method:'PUT',headers:asAdmin,body:JSON.stringify({roleId:'ceo',disabled:false})})).status,200);
   assert.equal((await fetch(`${staffBase}/staff/accounts/created-staff`,{method:'PUT',headers:{...asAdmin,'x-test-uid':'created-staff'},body:JSON.stringify({roleId:'viewer',disabled:true})})).status,403);
   mock.restoreAll();
+});
+
+
+test('email allowlists alone grant no runtime access and disabled administrators are blocked',async()=>{
+  const {resolveAccess}=await import('../src/services/access');
+  const unprovisioned=await resolveAccess({uid:'unknown-uid',email:'admin@example.com'});
+  assert.equal(unprovisioned.role,'viewer');assert.deepEqual(unprovisioned.permissions,[]);
+  const bound=await resolveAccess({uid:'admin',email:'changed@example.com'});
+  assert.equal(bound.role,'super_admin');
+  await db.update('staff','admin',{disabled:true});
+  try { await assert.rejects(resolveAccess({uid:'admin',email:'admin@example.com'}),{status:403}); }
+  finally { await db.update('staff','admin',{disabled:false}); }
+});
+
+test('contact and site-content routes reject arbitrary fields and public tags',async()=>{
+  const response=await request(`${base}/api/contacts`,{name:'Contact Test',email:'contact@example.com',subject:'Question',message:'Please contact me.',tags:['Injected'],roleId:'super_admin'});
+  assert.equal(response.status,201);const item=(await response.json()).data;
+  assert.equal(item.roleId,undefined);assert.ok(!item.tags.includes('Injected'));
+  assert.equal((await fetch(`${staffBase}/contacts/${item.id}`,{method:'PUT',headers:asAdmin,body:JSON.stringify({roleId:'super_admin'})})).status,400);
+  assert.equal((await fetch(`${staffBase}/contacts/${item.id}`,{method:'PUT',headers:asAdmin,body:JSON.stringify({status:'resolved'})})).status,200);
+  assert.equal((await fetch(`${staffBase}/content/home`,{method:'PUT',headers:asAdmin,body:JSON.stringify({id:'other',hero:{title:'Title',subtitle:'Text'}})})).status,400);
+  assert.equal((await fetch(`${staffBase}/content/home`,{method:'PUT',headers:asAdmin,body:JSON.stringify({hero:{title:'Title',subtitle:'Text'}})})).status,200);
+  assert.equal((await request(`${base}/api/contacts`,{name:'Contact Test',email:'contact@example.com',subject:'Question',message:'x'.repeat(5001)})).status,400);
+});
+
+test('API responses prevent framing and public form throttles reject excess submissions',async()=>{
+  const health=await fetch(`${base}/health`);
+  assert.equal(health.headers.get('x-frame-options'),'DENY');
+  assert.match(health.headers.get('content-security-policy')!,/frame-ancestors 'none'/);
+  const statuses=[];
+  for(let i=0;i<12;i++)statuses.push((await request(`${base}/api/contacts`,{name:'Spam',email:'spam@example.com',subject:'Question',message:'Test message',website:'filled'})).status);
+  assert.ok(statuses.includes(429));
+  assert.equal((await db.getAll('contacts')).filter(c=>c.email==='spam@example.com').length,0);
 });

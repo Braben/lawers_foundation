@@ -1,3 +1,4 @@
+import { clientAddress, consumeLimit } from '../services/abuse';
 import { createHash } from 'crypto';
 import { z } from 'zod';
 import { asyncRouter } from '../middleware/asyncRouter';
@@ -6,7 +7,7 @@ import { HttpError } from '../middleware/errors';
 import { db } from '../config/db';
 const router = asyncRouter();
 const pageViewSchema = z.object({ eventId:z.string().uuid(), visitorId:z.string().uuid(), sessionId:z.string().uuid(), path:z.string().max(300).regex(/^\/(?!\/)[^?#]*$/), referrer:z.string().max(200).default('direct') });
-const requests = new Map<string,{ start:number; count:number }>();
+
 router.post('/pageview', async (req,res) => {
   if (req.get('DNT')==='1' || req.get('Sec-GPC')==='1') { res.status(202).json({ success:true, data:null }); return; }
   if (req.get('origin') && req.get('origin') !== ((process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, ''))) throw new HttpError(403,'Origin not allowed');
@@ -15,11 +16,8 @@ router.post('/pageview', async (req,res) => {
   const path = parsed.data.path;
   if (path.startsWith('/admin') || path.startsWith('/api')) { res.status(202).json({ success:true,data:null }); return; }
   const now = Date.now();
-  const key = req.ip || 'unknown';
-  for (const [address, value] of requests) if (now - value.start > 60000) requests.delete(address);
-  if (requests.size > 10000 && !requests.has(key)) throw new HttpError(429,'Please try later');
-  const rate = requests.get(key) || { start:now, count:0 }; rate.count++; requests.set(key,rate);
-  if (rate.count>120) throw new HttpError(429,'Too many visits');
+  await consumeLimit('analytics:minute', clientAddress(req), 120, 60000);
+  await consumeLimit('analytics:daily', 'global', 10000, 86400000);
   const hash = (value:string) => createHash('sha256').update(`${process.env.FIREBASE_PROJECT_ID || 'test'}:${value}`).digest('hex');
   let referrer = 'direct';
   try { referrer = new URL(parsed.data.referrer).hostname; } catch {}

@@ -24,12 +24,12 @@ async function listRoles() {
     return [...features_1.DEFAULT_ROLES.map(role => role.protected ? role : stored.find(r => r.id === role.id) || role), ...stored.filter(role => !features_1.DEFAULT_ROLES.some(r => r.id === role.id))];
 }
 async function resolveAccess(user) {
-    if (bootstrapRole(user.email) === 'super_admin')
-        return { role: 'super_admin', permissions: [...features_1.PERMISSIONS], protected: true };
     const staff = await db_1.db.getById('staff', user.uid);
     if (staff?.disabled)
         throw new errors_1.HttpError(403, 'This staff account is disabled.');
-    const roleId = staff?.roleId || bootstrapRole(user.email);
+    const roleId = staff?.roleId || 'viewer';
+    if (roleId === 'super_admin')
+        return { role: 'super_admin', permissions: [...features_1.PERMISSIONS], protected: true };
     const role = (await listRoles()).find(r => r.id === roleId);
     return { role: roleId, permissions: (role?.permissions || []).filter((p) => features_1.PERMISSIONS.includes(p)), protected: false };
 }

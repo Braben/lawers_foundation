@@ -51,6 +51,7 @@ export const api = {
   getContacts: (tag = 'all') => apiRequest<Contact[]>(`/api/contacts?tag=${encodeURIComponent(tag)}`),
   getStats: () => apiRequest<AdminStats>('/api/admin/stats'),
   getRole: () => apiRequest<AccessProfile>('/api/auth/role'),
+  reviewRsvp: (eventId: string, id: string, status: 'approved' | 'rejected') => apiRequest<Rsvp>(`/api/events/${encodeURIComponent(eventId)}/rsvps/${encodeURIComponent(id)}`, {method:'PUT', body:JSON.stringify({status})}),
   getRsvps: (id: string) => apiRequest<Rsvp[]>(`/api/events/${encodeURIComponent(id)}/rsvps`),
   rsvp: (id: string, data: object) => apiRequest<Rsvp>(`/api/events/${encodeURIComponent(id)}/rsvp`, { method: 'POST', body: JSON.stringify(data) }),
   create: (col: 'programs' | 'stories' | 'events' | 'gallery', data: object) => apiRequest<unknown>(`/api/${col}`, { method: 'POST', body: JSON.stringify(data) }),

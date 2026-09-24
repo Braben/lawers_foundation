@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import * as admin from 'firebase-admin';
+import { getApps, deleteApp } from 'firebase-admin/app';
 import { initFirebase, getFirestore, getAuth } from '../config/firebase';
 import { DEFAULT_ROLES, DEFAULT_CURRENCIES } from '../config/features';
 import { CollectionName, mergeLocalData } from '../config/db';
@@ -21,9 +21,20 @@ async function main() {
   for(const role of DEFAULT_ROLES)await createMissing('roles',role.id,role);
   await createMissing('settings','currencies',DEFAULT_CURRENCIES);
   await createMissing('settings','analytics',{retentionDays:90,sessionTimeoutMinutes:30,enabled:true});
-  for(const email of [...(process.env.ADMIN_EMAILS||'').split(','),...(process.env.SUPER_ADMINS||'').split(',')].map(s=>s.trim()).filter(Boolean)){
-    try { const user=await getAuth()!.getUserByEmail(email);await createMissing('staff',user.uid,{email:user.email||email,name:user.displayName||'Administrator',roleId:'super_admin',disabled:false}); }
-    catch(error:any){if(error.code==='auth/user-not-found')console.warn('A configured administrator does not yet have a Firebase Auth account.');else throw error;}
+  // Run only as a trusted operator. Resolve configured accounts once to immutable UIDs;
+  // runtime authorization never trusts email allowlists.
+  const provision = [
+    {roleId:'super_admin',values:[process.env.ADMIN_EMAILS,process.env.SUPER_ADMINS]},
+    {roleId:'publisher',values:[process.env.CONTENT_PUBLISHERS]},
+    {roleId:'event_manager',values:[process.env.EVENT_MANAGERS]},
+  ];
+  for (const group of provision) for (const email of group.values.flatMap(value=>(value||'').split(',')).map(s=>s.trim()).filter(Boolean)) {
+    try {
+      const user=await getAuth()!.getUserByEmail(email);
+      await createMissing('staff',user.uid,{email:user.email||email,name:user.displayName||'Staff',roleId:group.roleId,disabled:user.disabled});
+    } catch(error:any) {
+      if(error.code==='auth/user-not-found') console.warn('A configured staff account does not yet exist in Firebase Auth.'); else throw error;
+    }
   }
   if(process.argv.includes('--migrate-local')){
     const names:CollectionName[]=['programs','stories','events','gallery','siteContent','donations','contacts','rsvps','roles','staff','settings','analyticsEvents'];
@@ -41,4 +52,4 @@ async function main() {
   }
   console.log(`Firestore initialized: ${created} missing records added; existing records preserved.`);
 }
-main().catch(error=>{console.error('Firestore initialization failed:',error.message);process.exitCode=1;}).finally(async()=>{await Promise.all(admin.apps.map(app=>app?.delete()));});
+main().catch(error=>{console.error('Firestore initialization failed:',error.message);process.exitCode=1;}).finally(async()=>{await Promise.all(getApps().map(app=>deleteApp(app)));});

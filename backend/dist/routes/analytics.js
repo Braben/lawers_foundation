@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.summarizeVisits = summarizeVisits;
+const abuse_1 = require("../services/abuse");
 const crypto_1 = require("crypto");
 const zod_1 = require("zod");
 const asyncRouter_1 = require("../middleware/asyncRouter");
@@ -9,7 +10,6 @@ const errors_1 = require("../middleware/errors");
 const db_1 = require("../config/db");
 const router = (0, asyncRouter_1.asyncRouter)();
 const pageViewSchema = zod_1.z.object({ eventId: zod_1.z.string().uuid(), visitorId: zod_1.z.string().uuid(), sessionId: zod_1.z.string().uuid(), path: zod_1.z.string().max(300).regex(/^\/(?!\/)[^?#]*$/), referrer: zod_1.z.string().max(200).default('direct') });
-const requests = new Map();
 router.post('/pageview', async (req, res) => {
     if (req.get('DNT') === '1' || req.get('Sec-GPC') === '1') {
         res.status(202).json({ success: true, data: null });
@@ -26,17 +26,8 @@ router.post('/pageview', async (req, res) => {
         return;
     }
     const now = Date.now();
-    const key = req.ip || 'unknown';
-    for (const [address, value] of requests)
-        if (now - value.start > 60000)
-            requests.delete(address);
-    if (requests.size > 10000 && !requests.has(key))
-        throw new errors_1.HttpError(429, 'Please try later');
-    const rate = requests.get(key) || { start: now, count: 0 };
-    rate.count++;
-    requests.set(key, rate);
-    if (rate.count > 120)
-        throw new errors_1.HttpError(429, 'Too many visits');
+    await (0, abuse_1.consumeLimit)('analytics:minute', (0, abuse_1.clientAddress)(req), 120, 60000);
+    await (0, abuse_1.consumeLimit)('analytics:daily', 'global', 10000, 86400000);
     const hash = (value) => (0, crypto_1.createHash)('sha256').update(`${process.env.FIREBASE_PROJECT_ID || 'test'}:${value}`).digest('hex');
     let referrer = 'direct';
     try {

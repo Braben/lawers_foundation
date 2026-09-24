@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const html_1 = require("../services/html");
 const asyncRouter_1 = require("../middleware/asyncRouter");
 const db_1 = require("../config/db");
 const auth_1 = require("../middleware/auth");
@@ -10,7 +11,7 @@ const schema = zod_1.z.object({
     slug: zod_1.z.string().min(2),
     title: zod_1.z.string().min(2),
     excerpt: zod_1.z.string().min(10),
-    content: zod_1.z.string().default(''),
+    content: zod_1.z.string().max(100000).default('').transform(html_1.cleanHtml),
     featuredImage: zod_1.z.string().default(''),
     author: zod_1.z.object({ name: zod_1.z.string(), avatar: zod_1.z.string().optional() }).default({ name: 'Admin', avatar: '' }),
     category: zod_1.z.string().default('news'),

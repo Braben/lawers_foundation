@@ -140,10 +140,37 @@ export const db = {
   async query(name: CollectionName, filters: Record<string, unknown> = {}) {
     return (await this.getAll(name)).filter(item => Object.entries(filters).every(([k, v]) => v === undefined || v === '' || String(item[k]) === String(v)));
   },
+  async reviewRsvp(eventId: string, rsvpId: string, status: 'approved' | 'rejected', reviewer: string) {
+    const review = (event: Row, rsvp: Row) => {
+      if (rsvp.eventId !== eventId) throw new HttpError(404, 'Registration not found');
+      if (rsvp.status !== 'pending') throw new HttpError(409, 'This registration has already been reviewed');
+      if (status === 'approved') validateRsvp(event, false, Number(rsvp.guests));
+      return { status, reviewedBy: reviewer, reviewedAt: new Date().toISOString() };
+    };
+    if (useFirestore()) {
+      const firestore = getFirestore()!;
+      const eventRef = firestore.collection('events').doc(eventId);
+      const rsvpRef = firestore.collection('rsvps').doc(rsvpId);
+      return firestore.runTransaction(async transaction => {
+        const [event, rsvp] = await transaction.getAll(eventRef, rsvpRef);
+        if (!event.exists || !rsvp.exists) throw new HttpError(404, 'Registration not found');
+        const fields = review(event.data()!, rsvp.data()!);
+        transaction.update(rsvpRef, fields);
+        if (status === 'approved') transaction.update(eventRef, { registeredCount: Number(event.data()!.registeredCount || 0) + Number(rsvp.data()!.guests) });
+        return { ...rsvp.data(), ...fields, id: rsvpId };
+      });
+    }
+    const local = readLocal();
+    const event = local.events.find(e => e.id === eventId), rsvp = local.rsvps.find(r => r.id === rsvpId);
+    if (!event || !rsvp) throw new HttpError(404, 'Registration not found');
+    Object.assign(rsvp, review(event, rsvp));
+    if (status === 'approved') event.registeredCount = Number(event.registeredCount || 0) + Number(rsvp.guests);
+    writeLocal(local); return rsvp;
+  },
   async registerRsvp(eventId: string, data: { name: string; email: string; phone?: string; guests: number }) {
     const email = data.email.trim().toLowerCase();
     const id = Buffer.from(`${eventId}:${email}`).toString('base64url');
-    const makePayload = (event: Row) => ({ ...data, email, id, eventId, eventTitle: event.title, createdAt: new Date().toISOString() });
+    const makePayload = (event: Row) => ({ ...data, email, id, eventId, eventTitle: event.title, status: 'pending', createdAt: new Date().toISOString() });
     if (useFirestore()) {
       const firestore = getFirestore()!;
       const eventRef = firestore.collection('events').doc(eventId);
@@ -156,7 +183,7 @@ export const db = {
         validateRsvp(event, existing.docs.some(d => String(d.data().email).toLowerCase() === email), data.guests);
         const payload = makePayload(event);
         transaction.create(rsvpRef, payload);
-        transaction.update(eventRef, { registeredCount: Number(event.registeredCount || 0) + data.guests });
+
         return payload;
       });
     }
@@ -166,7 +193,7 @@ export const db = {
     if (!event) throw new HttpError(404, 'Event not found');
     validateRsvp(event, local.rsvps.some(r => r.eventId === eventId && String(r.email).toLowerCase() === email), data.guests);
     const payload = makePayload(event);
-    local.rsvps.push(payload); event.registeredCount = Number(event.registeredCount || 0) + data.guests;
+    local.rsvps.push(payload);
     writeLocal(local); return payload;
   },
 };

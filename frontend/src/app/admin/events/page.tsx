@@ -38,12 +38,21 @@ export default function EventManager() {
     try { setRsvps(await api.getRsvps(ev.id)); } catch (error) { setMsg(errorMessage(error)); }
   };
 
+  const review = async (registration: Rsvp, status: 'approved' | 'rejected') => {
+    if (!selected) return;
+    try {
+      await api.reviewRsvp(selected.id, registration.id, status);
+      await openRsvps(await api.getEvent(selected.id)); load(); setMsg('Registration reviewed.');
+    } catch (error) { setMsg(errorMessage(error)); }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Event Manager</h1>
         <p className="text-sm text-gray-500">Create events, set capacity and review registrations.</p>
       </div>
+      {msg && <p role="status">{msg}</p>}
       <div className="grid lg:grid-cols-[0.95fr_1.2fr] gap-6">
         <form onSubmit={create} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-3"><fieldset disabled={!canManage} className="space-y-4">
           <div className="text-sm font-semibold text-[#2C5F2D]">Create Event</div>
@@ -86,13 +95,13 @@ export default function EventManager() {
                 <div className="font-semibold text-sm">{selected.title} — RSVPs</div>
                 <button onClick={()=>setSelected(null)} className="text-xs border px-2 py-1 rounded-lg bg-white">Close</button>
               </div>
-              <div className="text-xs text-gray-500 mb-2">Capacity capped: {selected.capacity} • {rsvps.length} registered • {Math.max(0,(selected.capacity||100)-rsvps.reduce((s,r)=>s+Number(r.guests||1),0))} spots left</div>
+              <div className="text-xs text-gray-500 mb-2">Capacity capped: {selected.capacity} • {rsvps.filter(r=>!r.status || r.status==='approved').length} confirmed • {Math.max(0,(selected.capacity||100)-rsvps.filter(r=>!r.status || r.status==='approved').reduce((s,r)=>s+Number(r.guests||1),0))} spots left</div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="text-gray-500"><tr><th className="text-left py-1">Name</th><th className="text-left">Email</th><th className="text-left">Guests</th><th className="text-left">Date</th></tr></thead>
+                  <thead className="text-gray-500"><tr><th className="text-left py-1">Name</th><th className="text-left">Email</th><th className="text-left">Guests</th><th className="text-left">Date</th><th className="text-left">Review</th></tr></thead>
                   <tbody>
                     {rsvps.map(r=>(
-                      <tr key={r.id} className="border-t"><td className="py-1">{r.name}</td><td>{r.email}</td><td>{r.guests}</td><td>{new Date(r.createdAt).toLocaleDateString()}</td></tr>
+                      <tr key={r.id} className="border-t"><td className="py-1">{r.name}</td><td>{r.email}</td><td>{r.guests}</td><td>{new Date(r.createdAt).toLocaleDateString()}</td><td>{r.status || 'approved'}{r.status==='pending' && canManage && <span className="flex gap-2"><button className="underline" onClick={()=>review(r,'approved')}>Confirm</button><button className="underline" onClick={()=>review(r,'rejected')}>Reject</button></span>}</td></tr>
                     ))}
                   </tbody>
                 </table>

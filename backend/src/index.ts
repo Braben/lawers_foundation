@@ -22,6 +22,14 @@ initFirebase();
 
 const app = express();
 app.disable('x-powered-by');
+app.use((_req,res,next)=>{
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+  res.setHeader('Referrer-Policy','no-referrer');
+  res.setHeader('Cache-Control','no-store');
+  next();
+});
 const PORT = process.env.PORT || 4000;
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').trim().replace(/\/+$/, '');
 

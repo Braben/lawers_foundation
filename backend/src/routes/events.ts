@@ -1,3 +1,4 @@
+import { protectSubmission } from '../services/abuse';
 import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
 import { requireAuth } from '../middleware/auth';
@@ -60,15 +61,22 @@ router.delete('/:id', requireAuth as any, requirePermission('events.manage') as 
 });
 
 // RSVP Controller — capacity capped, wired to frontend
-const rsvpSchema = z.object({ name: z.string().trim().min(2).max(150), email: z.string().trim().email().max(254), phone: z.string().optional(), guests: z.number().int().min(1).max(100).default(1) });
+const rsvpSchema = z.object({ name: z.string().trim().min(2).max(150), email: z.string().trim().email().max(254), phone: z.string().max(40).optional(), guests: z.number().int().min(1).max(5).default(1) });
 
-router.post('/:id/rsvp', async (req:any,res:any)=>{
+router.post('/:id/rsvp', protectSubmission('rsvp'), async (req:any,res:any)=>{
   const event:any = await db.getById('events', req.params.id) || await db.getBySlug('events', req.params.id);
   if(!event) return res.status(404).json({ success:false, message:'Event not found'});
   const parsed = rsvpSchema.safeParse(req.body);
   if(!parsed.success) return res.status(400).json({ success:false, message: parsed.error.issues.map(i=>i.message).join(', ')});
   const rsvp = await db.registerRsvp(event.id, parsed.data);
   res.status(201).json({ success:true, data: rsvp });
+});
+
+router.put('/:id/rsvps/:rsvpId', requireAuth, requirePermission('events.manage'), async (req:any,res) => {
+  const parsed = z.object({status:z.enum(['approved','rejected'])}).strict().safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({success:false,message:'Choose approve or reject.'}); return; }
+  const data = await db.reviewRsvp(String(req.params.id), String(req.params.rsvpId), parsed.data.status, req.user.uid);
+  res.json({success:true,data});
 });
 
 router.get('/:id/rsvps', requireAuth as any, requirePermission('events.view') as any, async (req:any,res:any)=>{

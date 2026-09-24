@@ -1,3 +1,4 @@
+import { protectSubmission } from '../services/abuse';
 import { asyncRouter } from '../middleware/asyncRouter';
 import { db } from '../config/db';
 import { requireAuth } from '../middleware/auth';
@@ -16,7 +17,7 @@ export const pledgeSchema = z.object({
   frequency: z.enum(['once', 'monthly']).default('once'),
   message: z.string().max(5000).optional(),
 });
-router.post('/', async (req, res) => {
+router.post('/', protectSubmission('pledge'), async (req, res) => {
   const parsed = pledgeSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ success: false, message: parsed.error.issues.map(i => i.message).join(', ') }); return; }
   const settings = await getCurrencies();

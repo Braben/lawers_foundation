@@ -99,7 +99,8 @@ export interface Contact {
   id: string; name: string; email: string; phone?: string; subject: string;
   message: string; tags: string[]; createdAt: string;
 }
-export interface Rsvp { id: string; name: string; email: string; phone?: string; guests: number; createdAt: string }
+export interface Rsvp {
+  status?: 'pending' | 'approved' | 'rejected'; id: string; name: string; email: string; phone?: string; guests: number; createdAt: string }
 export interface AdminStats {
   totalDonations: number; totalsByCurrency: Record<string, number>;
   upcomingEvents: number; totalContacts: number; totalStories: number;

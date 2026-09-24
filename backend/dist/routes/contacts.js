@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const abuse_1 = require("../services/abuse");
 const asyncRouter_1 = require("../middleware/asyncRouter");
 const db_1 = require("../config/db");
 const auth_1 = require("../middleware/auth");
@@ -24,18 +25,17 @@ function autoTags(subject, message, email) {
     return [...new Set(tags)];
 }
 const schema = zod_1.z.object({
-    name: zod_1.z.string().min(2),
-    email: zod_1.z.string().email(),
-    phone: zod_1.z.string().optional(),
-    subject: zod_1.z.string().min(2),
-    message: zod_1.z.string().min(5),
-    tags: zod_1.z.array(zod_1.z.string()).optional(),
+    name: zod_1.z.string().trim().min(2).max(150),
+    email: zod_1.z.string().trim().email().max(254),
+    phone: zod_1.z.string().trim().max(40).optional(),
+    subject: zod_1.z.string().trim().min(2).max(200),
+    message: zod_1.z.string().trim().min(5).max(5000),
 });
-router.post('/', async (req, res) => {
+router.post('/', (0, abuse_1.protectSubmission)('contact'), async (req, res) => {
     const parsed = schema.safeParse(req.body);
     if (!parsed.success)
         return res.status(400).json({ success: false, message: parsed.error.issues.map(i => i.message).join(', ') });
-    const tags = parsed.data.tags?.length ? parsed.data.tags : autoTags(parsed.data.subject, parsed.data.message, parsed.data.email);
+    const tags = autoTags(parsed.data.subject, parsed.data.message, parsed.data.email);
     const payload = { ...parsed.data, tags, status: 'new', createdAt: new Date().toISOString() };
     const created = await db_1.db.create('contacts', payload);
     res.status(201).json({ success: true, data: created, message: 'Message received. We will respond within 24-48 hours.' });
@@ -72,7 +72,15 @@ router.get('/:id', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.v
     res.json({ success: true, data: item });
 });
 router.put('/:id', auth_1.requireAuth, (0, rbac_1.requirePermission)('contacts.manage'), async (req, res) => {
-    const updated = await db_1.db.update('contacts', req.params.id, { ...req.body, updatedAt: new Date().toISOString() });
+    const parsed = schema.partial().extend({
+        tags: zod_1.z.array(zod_1.z.enum(['Donor', 'Volunteer', 'Subscriber', 'Caregiver', 'Education', 'General'])).max(6).optional(),
+        status: zod_1.z.enum(['new', 'in_progress', 'resolved', 'archived']).optional(),
+    }).strict().refine(value => Object.keys(value).length > 0).safeParse(req.body);
+    if (!parsed.success) {
+        res.status(400).json({ success: false, message: 'Invalid contact update fields.' });
+        return;
+    }
+    const updated = await db_1.db.update('contacts', String(req.params.id), parsed.data);
     res.json({ success: true, data: updated });
 });
 exports.default = router;

@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const abuse_1 = require("../services/abuse");
 const asyncRouter_1 = require("../middleware/asyncRouter");
 const db_1 = require("../config/db");
 const auth_1 = require("../middleware/auth");
@@ -69,8 +70,8 @@ router.delete('/:id', auth_1.requireAuth, (0, rbac_1.requirePermission)('events.
     res.json({ success: true });
 });
 // RSVP Controller — capacity capped, wired to frontend
-const rsvpSchema = zod_1.z.object({ name: zod_1.z.string().trim().min(2).max(150), email: zod_1.z.string().trim().email().max(254), phone: zod_1.z.string().optional(), guests: zod_1.z.number().int().min(1).max(100).default(1) });
-router.post('/:id/rsvp', async (req, res) => {
+const rsvpSchema = zod_1.z.object({ name: zod_1.z.string().trim().min(2).max(150), email: zod_1.z.string().trim().email().max(254), phone: zod_1.z.string().max(40).optional(), guests: zod_1.z.number().int().min(1).max(5).default(1) });
+router.post('/:id/rsvp', (0, abuse_1.protectSubmission)('rsvp'), async (req, res) => {
     const event = await db_1.db.getById('events', req.params.id) || await db_1.db.getBySlug('events', req.params.id);
     if (!event)
         return res.status(404).json({ success: false, message: 'Event not found' });
@@ -79,6 +80,15 @@ router.post('/:id/rsvp', async (req, res) => {
         return res.status(400).json({ success: false, message: parsed.error.issues.map(i => i.message).join(', ') });
     const rsvp = await db_1.db.registerRsvp(event.id, parsed.data);
     res.status(201).json({ success: true, data: rsvp });
+});
+router.put('/:id/rsvps/:rsvpId', auth_1.requireAuth, (0, rbac_1.requirePermission)('events.manage'), async (req, res) => {
+    const parsed = zod_1.z.object({ status: zod_1.z.enum(['approved', 'rejected']) }).strict().safeParse(req.body);
+    if (!parsed.success) {
+        res.status(400).json({ success: false, message: 'Choose approve or reject.' });
+        return;
+    }
+    const data = await db_1.db.reviewRsvp(String(req.params.id), String(req.params.rsvpId), parsed.data.status, req.user.uid);
+    res.json({ success: true, data });
 });
 router.get('/:id/rsvps', auth_1.requireAuth, (0, rbac_1.requirePermission)('events.view'), async (req, res) => {
     const event = await db_1.db.getById('events', req.params.id) || await db_1.db.getBySlug('events', req.params.id);

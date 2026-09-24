@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.pledgeSchema = void 0;
+const abuse_1 = require("../services/abuse");
 const asyncRouter_1 = require("../middleware/asyncRouter");
 const db_1 = require("../config/db");
 const auth_1 = require("../middleware/auth");
@@ -19,7 +20,7 @@ exports.pledgeSchema = zod_1.z.object({
     frequency: zod_1.z.enum(['once', 'monthly']).default('once'),
     message: zod_1.z.string().max(5000).optional(),
 });
-router.post('/', async (req, res) => {
+router.post('/', (0, abuse_1.protectSubmission)('pledge'), async (req, res) => {
     const parsed = exports.pledgeSchema.safeParse(req.body);
     if (!parsed.success) {
         res.status(400).json({ success: false, message: parsed.error.issues.map(i => i.message).join(', ') });
