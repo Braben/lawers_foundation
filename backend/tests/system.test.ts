@@ -60,6 +60,15 @@ test('production API rejects anonymous stats and forged tokens without Firebase'
   assert.equal((await fetch(`${base}/api/donations`)).status, 401);
   assert.equal((await fetch(`${base}/api/donations`, { headers: { Authorization: 'Bearer forged' } })).status, 503);
 });
+
+test('direct upload endpoints require gallery permission and strict metadata',async()=>{
+  for(const endpoint of ['authorize','complete']){
+    assert.equal((await request(`${base}/api/upload/${endpoint}`,{})).status,401);
+    assert.equal((await fetch(`${staffBase}/upload/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','x-test-email':'events@example.com'},body:'{}'})).status,403);
+  }
+  assert.equal((await request(`${staffBase}/upload/authorize`,{files:[{name:'large.png',size:6_000_000}]})).status,400);
+  assert.equal((await request(`${staffBase}/upload/complete`,{ticket:'fake',url:'https://evil.example/image.png'})).status,400);
+});
 test('roles default to viewer and combine both administrator lists', async () => {
   const { getUserRole } = await import('../src/middleware/rbac');
   assert.equal(getUserRole('stranger@example.com'), 'viewer');

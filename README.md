@@ -51,7 +51,7 @@ Use **Currencies** to add supported ISO currencies, enable or disable choices, a
 
 ## Gallery and videos
 
-**Gallery** accepts up to 20 JPEG, PNG or WebP images per batch, 5 MB per file and 50 MB total. Files are signature-checked before uploading; Cloudinary performs image processing validation. A batch uses a shared category and description, with optional numbered titles. If a batch fails, the API attempts to remove files uploaded for that batch. Interrupted provider requests can require checking Cloudinary for orphaned assets.
+**Gallery** accepts up to 20 JPEG, PNG or WebP images per batch, 5 MB per file and 50 MB total. Files are signature-checked before uploading; Cloudinary performs image processing validation. A batch uses a shared category and description, with optional numbered titles. The browser sends each file directly to Cloudinary using a short-lived server signature, avoiding the Vercel request-body limit. Only small authorization and completion requests pass through the backend. The backend verifies provider metadata before publishing each image. Successful images remain saved when another fails; retry processes the remaining images and skips reuploading files whose upload already succeeded. Keep the page open to retain retry state. Cancel and select files again if authorization expires after one hour. Interrupted or rejected uploads can leave unpublished assets in Cloudinary; review those in its console. Verification consumes Cloudinary Admin API quota. No unsigned upload preset is required.
 
 The existing content editor media library uses the same storage service. Removing a published gallery entry unpublishes its metadata but retains the underlying image, because a story may reference it. Delete unreferenced assets in Cloudinary when appropriate to reclaim quota.
 
@@ -91,3 +91,5 @@ Frontend and API responses prevent external framing. The frontend CSP restricts 
 Verification: `npm test` and `npm run build` in both projects, plus frontend `npm run lint -- --max-warnings 0`. Tests include sanitizer payloads, permission boundaries, input schemas, bot-token failures, rate limits and pending RSVP approvals.
 
 The backend pins `jwks-rsa`'s nested `jose` to 5.10.0, which supports CommonJS. Version 6 is ESM-only and fails in Vercel runtimes without native `require(esm)` support. Keep this scoped override until the upstream/runtime incompatibility is resolved. The runtime regression test starts the compiled backend with `--no-experimental-require-module` and checks RSA signing-key conversion, health and CORS. Run the backend build before tests.
+
+The sanitizer also uses a scoped `htmlparser2` 10.1.0 override: its 12.x release is ESM-only. The same strict CommonJS startup test loads the sanitizer, and sanitizer regression tests verify that executable markup is removed.

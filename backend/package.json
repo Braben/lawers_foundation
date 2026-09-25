@@ -35,6 +35,9 @@
     },
     "jwks-rsa": {
       "jose": "5.10.0"
+    },
+    "sanitize-html": {
+      "htmlparser2": "10.1.0"
     }
   }
 }

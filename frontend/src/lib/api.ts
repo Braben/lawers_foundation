@@ -1,3 +1,4 @@
+import { uploadGalleryImages, type UploadMetadata, type PendingImage } from './direct-upload';
 import type { ApiResponse, Program, BlogPost, Event, GalleryItem, Donation, Contact, Rsvp, AdminStats, AccessProfile, CurrencySettings, VisitAnalytics, RoleDefinition, StaffAccount } from '@/types';
 import { auth } from './firebase';
 import { API_BASE as BASE } from './api-base';
@@ -32,11 +33,7 @@ export const api = {
   getAssignableRoles: () => apiRequest<RoleDefinition[]>('/api/staff/assignable-roles'),
   createStaff: (data: { name: string; email: string; password: string; roleId: string }) => apiRequest<StaffAccount>('/api/staff/accounts', { method:'POST', body:JSON.stringify(data) }),
   updateStaff: (id: string, data: { roleId: string; disabled: boolean }) => apiRequest<StaffAccount>(`/api/staff/accounts/${encodeURIComponent(id)}`, { method:'PUT', body:JSON.stringify(data) }),
-  uploadImages: async (files: File[], metadata: { title: string; description: string; category: string }) => {
-    const body = new FormData(); files.forEach(file => body.append('files',file));
-    Object.entries(metadata).forEach(([key,value]) => body.append(key,value));
-    return apiRequest<GalleryItem[]>('/api/upload/images', { method:'POST',body });
-  },
+  uploadImages: (files:File[], metadata:UploadMetadata, onProgress?:(done:number,total:number)=>void, retry?:PendingImage[]) => uploadGalleryImages(files,metadata,apiRequest,onProgress,retry),
   getPrograms: () => apiRequest<Program[]>('/api/programs'),
   getProgram: (slug: string) => apiRequest<Program>(`/api/programs/${encodeURIComponent(slug)}`),
   getStories: (category?: string) => apiRequest<BlogPost[]>(`/api/stories${filter(category)}`),
@@ -57,9 +54,9 @@ export const api = {
   create: (col: 'programs' | 'stories' | 'events' | 'gallery', data: object) => apiRequest<unknown>(`/api/${col}`, { method: 'POST', body: JSON.stringify(data) }),
   update: (col: string, id: string, data: object) => apiRequest<unknown>(`/api/${col}/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) }),
   remove: (col: string, id: string) => apiRequest<unknown>(`/api/${col}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
-  uploadImage: async (file: File, metadata: { title: string; description: string; category: string }) => {
-    const body = new FormData(); body.append('file', file);
-    Object.entries(metadata).forEach(([key, value]) => body.append(key, value));
-    return apiRequest<GalleryItem>('/api/upload/gallery', { method: 'POST', body });
+  uploadImage: async (file: File, metadata: UploadMetadata) => {
+    const result=await uploadGalleryImages([file],metadata,apiRequest);
+    if(result.failed.length)throw new Error(result.failed[0].message);
+    return result.items[0];
   },
 };

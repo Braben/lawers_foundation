@@ -1,3 +1,5 @@
+import { authorizeImages, completeImage, directUploadSchema } from '../services/direct-upload';
+import { consumeLimit } from '../services/abuse';
 import { asyncRouter } from '../middleware/asyncRouter';
 import multer from 'multer';
 import { randomUUID } from 'crypto';
@@ -11,6 +13,18 @@ import { db, DATA_DIR } from '../config/db';
 import { HttpError } from '../middleware/errors';
 export const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 const router = asyncRouter();
+router.post('/authorize', requireAuth, requirePermission('gallery.manage'), async (req:any,res)=>{
+  const parsed=directUploadSchema.safeParse(req.body);
+  if(!parsed.success)throw new HttpError(400,parsed.error.issues.map(issue=>issue.message).join(', '));
+  await consumeLimit('gallery:authorize',req.user.uid,30,3600000);
+  res.json({success:true,data:authorizeImages(req.user.uid,parsed.data)});
+});
+router.post('/complete', requireAuth, requirePermission('gallery.manage'), async(req:any,res)=>{
+  const parsed=z.object({ticket:z.string().max(16000)}).strict().safeParse(req.body);
+  if(!parsed.success)throw new HttpError(400,'Invalid upload completion');
+  await consumeLimit('gallery:complete',req.user.uid,300,3600000);
+  res.json({success:true,data:await completeImage(parsed.data.ticket,req.user.uid)});
+});
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 20, fields: 4 } });
 export function imageFormat(buffer: Buffer): { extension: string; mime: string } | null {
   if (buffer.length >= 12 && buffer.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) return { extension: 'png', mime: 'image/png' };

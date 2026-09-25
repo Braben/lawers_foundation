@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UPLOAD_DIR = void 0;
 exports.imageFormat = imageFormat;
+const direct_upload_1 = require("../services/direct-upload");
+const abuse_1 = require("../services/abuse");
 const asyncRouter_1 = require("../middleware/asyncRouter");
 const multer_1 = __importDefault(require("multer"));
 const crypto_1 = require("crypto");
@@ -18,6 +20,20 @@ const db_1 = require("../config/db");
 const errors_1 = require("../middleware/errors");
 exports.UPLOAD_DIR = path_1.default.join(db_1.DATA_DIR, 'uploads');
 const router = (0, asyncRouter_1.asyncRouter)();
+router.post('/authorize', auth_1.requireAuth, (0, rbac_1.requirePermission)('gallery.manage'), async (req, res) => {
+    const parsed = direct_upload_1.directUploadSchema.safeParse(req.body);
+    if (!parsed.success)
+        throw new errors_1.HttpError(400, parsed.error.issues.map(issue => issue.message).join(', '));
+    await (0, abuse_1.consumeLimit)('gallery:authorize', req.user.uid, 30, 3600000);
+    res.json({ success: true, data: (0, direct_upload_1.authorizeImages)(req.user.uid, parsed.data) });
+});
+router.post('/complete', auth_1.requireAuth, (0, rbac_1.requirePermission)('gallery.manage'), async (req, res) => {
+    const parsed = zod_1.z.object({ ticket: zod_1.z.string().max(16000) }).strict().safeParse(req.body);
+    if (!parsed.success)
+        throw new errors_1.HttpError(400, 'Invalid upload completion');
+    await (0, abuse_1.consumeLimit)('gallery:complete', req.user.uid, 300, 3600000);
+    res.json({ success: true, data: await (0, direct_upload_1.completeImage)(parsed.data.ticket, req.user.uid) });
+});
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 20, fields: 4 } });
 function imageFormat(buffer) {
     if (buffer.length >= 12 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
