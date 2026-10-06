@@ -35,3 +35,13 @@ The sitemap includes public static routes and current stories/events, excluding 
 No sitemap is submitted to Analytics. The integration reports public page views, excludes admin pages, omits query strings/fragments and reduces external referrers to their origin. It respects Do Not Track and Global Privacy Control. Advertising signals are disabled. The existing dashboard analytics remains independent. No consent banner is added by this change.
 
 References: https://support.google.com/webmasters/answer/7451001 and https://developers.google.com/analytics/devguides/collection/ga4/views
+
+## SEO rendering and metadata
+
+Public routes now provide individual titles, descriptions, canonical URLs and social metadata. Story and event metadata comes from the corresponding record. The default production origin is `https://www.lawerandlawersfoundation.org`; an existing `NEXT_PUBLIC_SITE_URL` overrides it, so confirm the Vercel value uses that same primary domain.
+
+The homepage, programs, story list, event list and detail pages read public backend content on the server. Production `NEXT_PUBLIC_API_URL` must be reachable from Vercel. API failures surface as errors rather than fabricated empty pages. Story HTML is sanitized before server rendering. Filters and registration remain interactive. The contact form alone uses a loading boundary so other routes can return missing-content status codes before streaming begins.
+
+Organization JSON-LD appears on the homepage, BlogPosting on stories, and Event on events with sufficient location details. Structured data does not guarantee enhanced search results. Check a deployed story/event with Google's Rich Results Test and use Search Console URL Inspection after deployment. Replace abbreviated placeholder story bodies with genuine detailed accounts; metadata cannot compensate for thin content.
+
+Keep alternate domains redirected to the primary domain through Vercel's domain settings. Canonical metadata identifies the preferred URL but does not itself create redirects.

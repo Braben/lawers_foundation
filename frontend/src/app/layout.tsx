@@ -1,7 +1,6 @@
 import { VisitTracker } from '@/components/VisitTracker';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { SITE_URL } from '@/lib/site';
-import { Suspense } from 'react';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -47,14 +46,6 @@ export const metadata: Metadata = {
 
 };
 
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-[#2C5F2D] border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,11 +61,9 @@ export default function RootLayout({
           <Navbar />
           <VisitTracker />
           <GoogleAnalytics />
-          <Suspense fallback={<LoadingFallback />}>
             <main id="main-content" role="main">
               {children}
             </main>
-          </Suspense>
           <Footer />
         </AuthProvider>
       </body>
