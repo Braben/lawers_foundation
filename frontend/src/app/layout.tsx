@@ -1,4 +1,6 @@
 import { VisitTracker } from '@/components/VisitTracker';
+import { GoogleAnalytics } from '@/components/GoogleAnalytics';
+import { SITE_URL } from '@/lib/site';
 import { Suspense } from 'react';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -17,6 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
   title: {
     default: "Lawer and Lawers Foundation | Empowering Orphans, Widows & Caregivers in Ghana",
     template: "%s | Lawer and Lawers Foundation",
@@ -65,6 +69,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <VisitTracker />
+          <GoogleAnalytics />
           <Suspense fallback={<LoadingFallback />}>
             <main id="main-content" role="main">
               {children}
